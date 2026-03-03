@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotspot Annotation Tool</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #dfe6e9;
+      padding: 20px;
+    }
+    h1 { margin-bottom: 8px; font-size: 1.4rem; }
+    .instructions {
+      color: #b2bec3;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+    .controls-row {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .controls-row label {
+      font-size: 0.9rem;
+      margin-right: 4px;
+    }
+    .controls-row select {
+      background: #2d3436;
+      color: #dfe6e9;
+      border: 1px solid #636e72;
+      border-radius: 4px;
+      padding: 6px 10px;
+      font-size: 0.9rem;
+    }
+    .image-tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .image-tabs button {
+      background: #2d3436;
+      color: #b2bec3;
+      border: 1px solid #636e72;
+      border-radius: 6px 6px 0 0;
+      padding: 6px 16px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s, color 0.2s;
+    }
+    .image-tabs button.active {
+      background: #636e72;
+      color: #fff;
+      border-bottom-color: #636e72;
+    }
+    .image-tabs button:hover:not(.active) {
+      background: #3d4446;
+    }
+    .image-tabs button:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .layout {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+    .image-panel {
+      position: relative;
+      flex-shrink: 0;
+      cursor: crosshair;
+      border: 2px solid #636e72;
+      border-radius: 0 8px 8px 8px;
+      overflow: hidden;
+    }
+    .image-panel img {
+      display: block;
+      max-height: 80vh;
+      width: auto;
+      -webkit-user-drag: none;
+      user-select: none;
+      pointer-events: none;
+    }
+    .drawn-box {
+      position: absolute;
+      border: 2px solid #e74c3c;
+      background: rgba(231, 76, 60, 0.2);
+      pointer-events: none;
+    }
+    .drawn-box .box-label {
+      position: absolute;
+      top: -20px;
+      left: 0;
+      background: #e74c3c;
+      color: #fff;
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+    .preview-box {
+      position: absolute;
+      border: 2px dashed #ffeaa7;
+      background: rgba(255, 234, 167, 0.15);
+      pointer-events: none;
+    }
+    .data-panel {
+      flex: 1;
+      min-width: 320px;
+    }
+    .box-list { margin-bottom: 16px; }
+    .box-entry {
+      background: #2d3436;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+    .box-entry code { color: #00b894; font-size: 0.8rem; }
+    .box-entry button {
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+    .box-entry button:hover { background: #c0392b; }
+    .output-area {
+      background: #2d3436;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .output-area h3 {
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      color: #00b894;
+    }
+    pre {
+      background: #1a1a2e;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 0.8rem;
+      color: #dfe6e9;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    .btn-copy {
+      background: #0984e3;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .btn-copy:hover { background: #0773c5; }
+    .btn-save {
+      background: #e17055;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .btn-save:hover { background: #c0392b; }
+    .btn-row { display: flex; gap: 10px; margin-top: 10px; }
+    .save-status {
+      color: #00b894;
+      font-size: 0.85rem;
+      margin-top: 8px;
+      min-height: 20px;
+    }
+    .coords-display {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(0,0,0,0.8);
+      color: #ffeaa7;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      pointer-events: none;
+    }
+    .id-input {
+      background: #1a1a2e;
+      border: 1px solid #636e72;
+      color: #dfe6e9;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      width: 160px;
+      margin-right: 8px;
+    }
+    .name-prompt {
+      position: absolute;
+      background: #2d3436;
+      border: 2px solid #00b894;
+      border-radius: 8px;
+      padding: 12px;
+      z-index: 100;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .name-prompt button {
+      background: #00b894;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hotspot Annotation Tool</h1>
+  <p class="instructions">
+    <strong>Select a product</strong> from the dropdown, then pick an image tab (Front / Ingredients / Nutrition).
+    <strong>Click and drag</strong> on the image to draw a box. Each image saves independently.
+  </p>
+
+  <div class="controls-row">
+    <div>
+      <label>Product:</label>
+      <select id="productSelect"></select>
+    </div>
+    <div class="image-tabs" id="imageTabs">
+      <button data-key="front" class="active">Front</button>
+      <button data-key="ingredients">Ingredients</button>
+      <button data-key="nutrition">Nutrition</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="image-panel" id="imagePanel">
+      <img id="theImage" src="" alt="Product" />
+    </div>
+
+    <div class="data-panel">
+      <div class="box-list" id="boxList"></div>
+      <div class="output-area">
+        <h3 id="outputTitle">Hotspots for: front</h3>
+        <pre id="output">// Draw boxes on the image</pre>
+        <div class="btn-row">
+          <button class="btn-copy" id="btnCopy">Copy to Clipboard</button>
+          <button class="btn-save" id="btnSave">Save (front)</button>
+        </div>
+        <div class="save-status" id="saveStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="coords-display" id="coordsDisplay">Move cursor over image</div>
+
+  <script type="module">
+    import { productsData } from './src/data/products.js';
+
+    const panel = document.getElementById('imagePanel');
+    const img = document.getElementById('theImage');
+    const boxList = document.getElementById('boxList');
+    const output = document.getElementById('output');
+    const outputTitle = document.getElementById('outputTitle');
+    const coordsDisplay = document.getElementById('coordsDisplay');
+    const btnCopy = document.getElementById('btnCopy');
+    const btnSave = document.getElementById('btnSave');
+    const saveStatus = document.getElementById('saveStatus');
+    const productSelect = document.getElementById('productSelect');
+    const tabButtons = document.querySelectorAll('#imageTabs button');
+
+    let boxesByKey = { front: [], ingredients: [], nutrition: [] };
+    let activeKey = 'front';
+    let drawing = false;
+    let startX = 0, startY = 0;
+    let previewEl = null;
+    let currentProduct = null;
+    let allHotspots = {};
+
+    productsData.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = `${p.name} (${p.id})`;
+      if (!p.images) opt.textContent += ' — no image';
+      productSelect.appendChild(opt);
+    });
+
+    async function fetchHotspots() {
+      const res = await fetch('/get-hotspots');
+      allHotspots = await res.json();
+    }
+
+    async function loadProduct(id) {
+      const product = productsData.find(p => p.id === id);
+      if (!product) return;
+      currentProduct = product;
+
+      await fetchHotspots();
+      const hs = allHotspots[id] || { front: [], ingredients: [], nutrition: [] };
+      boxesByKey.front = hs.front.map(h => ({ ...h }));
+      boxesByKey.ingredients = hs.ingredients.map(h => ({ ...h }));
+      boxesByKey.nutrition = hs.nutrition.map(h => ({ ...h }));
+
+      updateTabs();
+      switchImage(activeKey);
+    }
+
+    function updateTabs() {
+      tabButtons.forEach(btn => {
+        const key = btn.dataset.key;
+        const hasImage = currentProduct?.images?.[key];
+        btn.disabled = !hasImage;
+        if (!hasImage && key === activeKey) {
+          activeKey = 'front';
+        }
+      });
+      updateTabLabels();
+    }
+
+    function updateTabLabels() {
+      tabButtons.forEach(btn => {
+        const key = btn.dataset.key;
+        const count = boxesByKey[key].length;
+        const label = { front: 'Front', ingredients: 'Ingredients', nutrition: 'Nutrition' }[key];
+        btn.textContent = count > 0 ? `${label} (${count})` : label;
+        btn.classList.toggle('active', key === activeKey);
+      });
+    }
+
+    function switchImage(key) {
+      activeKey = key;
+
+      const src = currentProduct?.images?.[key];
+      img.src = src || '';
+
+      panel.querySelectorAll('.drawn-box, .name-prompt, .preview-box').forEach(el => el.remove());
+
+      outputTitle.textContent = `Hotspots for: ${key}`;
+      btnSave.textContent = `Save (${key})`;
+      saveStatus.textContent = '';
+
+      renderAll();
+    }
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        switchImage(btn.dataset.key);
+      });
+    });
+
+    productSelect.addEventListener('change', () => loadProduct(productSelect.value));
+    loadProduct(productsData[0].id);
+
+    function getPercent(e) {
+      const rect = img.getBoundingClientRect();
+      const x = Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10;
+      const y = Math.round(((e.clientY - rect.top) / rect.height) * 1000) / 10;
+      return { x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) };
+    }
+
+    panel.addEventListener('mousemove', e => {
+      const p = getPercent(e);
+      coordsDisplay.textContent = `x: ${p.x}%  y: ${p.y}%  [${activeKey}]`;
+
+      if (drawing && previewEl) {
+        const left = Math.min(startX, p.x);
+        const top = Math.min(startY, p.y);
+        const width = Math.abs(p.x - startX);
+        const height = Math.abs(p.y - startY);
+        previewEl.style.left = left + '%';
+        previewEl.style.top = top + '%';
+        previewEl.style.width = width + '%';
+        previewEl.style.height = height + '%';
+      }
+    });
+
+    panel.addEventListener('mousedown', e => {
+      if (e.target.closest('.name-prompt')) return;
+      const p = getPercent(e);
+      drawing = true;
+      startX = p.x;
+      startY = p.y;
+
+      previewEl = document.createElement('div');
+      previewEl.className = 'preview-box';
+      previewEl.style.left = p.x + '%';
+      previewEl.style.top = p.y + '%';
+      previewEl.style.width = '0%';
+      previewEl.style.height = '0%';
+      panel.appendChild(previewEl);
+    });
+
+    panel.addEventListener('mouseup', e => {
+      if (!drawing) return;
+      drawing = false;
+      const p = getPercent(e);
+
+      if (previewEl) {
+        previewEl.remove();
+        previewEl = null;
+      }
+
+      const left = Math.round(Math.min(startX, p.x) * 10) / 10;
+      const top = Math.round(Math.min(startY, p.y) * 10) / 10;
+      const width = Math.round(Math.abs(p.x - startX) * 10) / 10;
+      const height = Math.round(Math.abs(p.y - startY) * 10) / 10;
+
+      if (width < 1 || height < 1) return;
+
+      showNamePrompt(left, top, width, height);
+    });
+
+    function showNamePrompt(left, top, width, height) {
+      const existing = panel.querySelector('.name-prompt');
+      if (existing) existing.remove();
+
+      const targetKey = activeKey;
+
+      const prompt = document.createElement('div');
+      prompt.className = 'name-prompt';
+      prompt.style.left = left + '%';
+      prompt.style.top = (top + height + 1) + '%';
+      prompt.innerHTML = `
+        <input class="id-input" type="text" placeholder="hotspot-id (e.g. power-c)" autofocus />
+        <button>Add</button>
+      `;
+
+      const input = prompt.querySelector('input');
+      const btn = prompt.querySelector('button');
+
+      function addBox() {
+        const boxes = boxesByKey[targetKey];
+        const id = input.value.trim() || `hotspot-${boxes.length + 1}`;
+        boxes.push({ id, left, top, width, height });
+        prompt.remove();
+        if (activeKey === targetKey) renderAll();
+      }
+
+      btn.addEventListener('click', addBox);
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') addBox(); });
+
+      panel.appendChild(prompt);
+      input.focus();
+    }
+
+    function renderAll() {
+      const boxes = boxesByKey[activeKey];
+      panel.querySelectorAll('.drawn-box').forEach(el => el.remove());
+
+      boxes.forEach((box) => {
+        const div = document.createElement('div');
+        div.className = 'drawn-box';
+        div.style.left = box.left + '%';
+        div.style.top = box.top + '%';
+        div.style.width = box.width + '%';
+        div.style.height = box.height + '%';
+        div.innerHTML = `<span class="box-label">${box.id}</span>`;
+        panel.appendChild(div);
+      });
+
+      let listHtml = '';
+      boxes.forEach((box, i) => {
+        listHtml += `
+          <div class="box-entry">
+            <div>
+              <strong>${box.id}</strong><br>
+              <code>left:${box.left} top:${box.top} w:${box.width} h:${box.height}</code>
+            </div>
+            <button onclick="removeBox(${i})">Remove</button>
+          </div>`;
+      });
+      boxList.innerHTML = listHtml;
+
+      const code = boxes.length === 0
+        ? '// Draw boxes on the image'
+        : `${activeKey}: [\n` + boxes.map(b =>
+            `  { id: '${b.id}', left: ${b.left}, top: ${b.top}, width: ${b.width}, height: ${b.height} }`
+          ).join(',\n') + '\n]';
+      output.textContent = code;
+
+      updateTabLabels();
+    }
+
+    window.removeBox = (index) => {
+      boxesByKey[activeKey].splice(index, 1);
+      renderAll();
+    };
+
+    btnCopy.addEventListener('click', () => {
+      navigator.clipboard.writeText(output.textContent).then(() => {
+        btnCopy.textContent = 'Copied!';
+        setTimeout(() => { btnCopy.textContent = 'Copy to Clipboard'; }, 2000);
+      });
+    });
+
+    btnSave.addEventListener('click', async () => {
+      const boxes = boxesByKey[activeKey];
+
+      if (!currentProduct) {
+        saveStatus.textContent = 'No product selected.';
+        saveStatus.style.color = '#e17055';
+        return;
+      }
+
+      btnSave.textContent = 'Saving...';
+      try {
+        const res = await fetch('/save-hotspots', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productId: currentProduct.id,
+            imageKey: activeKey,
+            hotspots: boxes
+          })
+        });
+        if (res.ok) {
+          saveStatus.textContent = `Saved ${boxes.length} ${activeKey} hotspots for "${currentProduct.id}"`;
+          saveStatus.style.color = '#00b894';
+        } else {
+          const err = await res.text();
+          saveStatus.textContent = 'Error: ' + err;
+          saveStatus.style.color = '#e17055';
+        }
+      } catch (e) {
+        saveStatus.textContent = 'Failed to connect — make sure you\'re running server.py';
+        saveStatus.style.color = '#e17055';
+      }
+      btnSave.textContent = `Save (${activeKey})`;
+    });
+  </script>
+</body>
+</html>

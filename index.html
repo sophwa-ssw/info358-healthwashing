@@ -3,20 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Healthwashing: The Grocery Store Challenge</title>
+  <title>INFO 358: Healthwashing</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="game-container"></div>
 
-  <!-- Product inspection modal overlay -->
+  <!-- Product inspection modal -->
   <div id="product-modal" class="modal-overlay hidden">
     <div class="modal-content">
       <div class="modal-header">
         <h2 id="modal-product-name">Product Name</h2>
         <button id="modal-close" class="modal-close-btn">&times;</button>
       </div>
-      <div class="modal-body">
+
+      <!-- Phase 1: User selects hotspots -->
+      <div id="phase-select" class="modal-body">
+        <p class="modal-instructions">Tap the areas on the packaging you think are examples of healthwashing. Hold <strong>Shift</strong> and click multiple areas to group elements that work together.</p>
+        <p class="zoom-hint">Double-click the image to zoom in. Double-click again to zoom out.</p>
+        <div class="images-row">
+          <div id="image-container" class="image-container">
+            <div id="zoom-inner" class="zoom-inner">
+              <img id="modal-image" src="" alt="Product packaging" />
+              <!-- hotspot divs injected by JS -->
+            </div>
+          </div>
+          <div id="extra-images" class="extra-images"></div>
+        </div>
+        <div id="reasoning-area" class="reasoning-area"></div>
+        <div class="modal-footer">
+          <button id="btn-submit" class="btn btn-submit">Submit</button>
+        </div>
+      </div>
+
+      <!-- Phase 2: Comparison reveal -->
+      <div id="phase-reveal" class="modal-body hidden">
+        <div id="reveal-comparison" class="reveal-comparison"></div>
+        <div id="reveal-evidence" class="reveal-evidence"></div>
+        <div id="reveal-summary" class="reveal-summary"></div>
+        <div class="modal-footer">
+          <button id="btn-continue" class="btn btn-submit">Continue</button>
+        </div>
+      </div>
+
+      <!-- Fallback for items with no images -->
+      <div id="phase-empty" class="modal-body hidden">
+        <p class="modal-instructions">This product hasn't been set up yet.</p>
+        <div class="modal-footer">
+          <button id="btn-empty-close" class="btn btn-submit">Close</button>
+        </div>
       </div>
     </div>
   </div>
