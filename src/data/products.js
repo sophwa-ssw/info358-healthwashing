@@ -39,11 +39,13 @@ export const productsData = [
     },
     ourPicks: [1, 2, 6, 7, 9],
     explanations: {
-      1: '"Sustained energy" can create the impression that the product provides a specific or prolonged performance benefit, even though the phrase is not a standardized nutrition claim and provides no measurable definition of what "sustained" means.',
-      6: '"Non-GMO" can make the product appear healthier or higher quality to consumers, even though the Non-GMO Project Verified label only indicates that the product meets standards for avoiding genetically modified ingredients and does not reflect its sugar, calorie, or overall nutritional quality.',
-      7: '"Made with organic oats" and the organic seal can make the product seem healthier or more nutritious, even though "organic" refers to how ingredients are grown and processed under USDA standards and does not indicate that the product is lower in sugar, calories, or overall nutritional quality.'
+      1: '"Sustained energy" can create the impression that the product provides a specific or prolonged performance benefit, even though the phrase is not a standardized nutrition claim and provides no measurable definition of what "sustained" means.'
     },
     ourGroups: [
+      {
+        ids: [6, 7],
+        explanation: '"Made with organic oats" and the organic seal can make the product seem healthier or more nutritious, even though "organic" refers to how ingredients are grown and processed under USDA standards and does not indicate that the product is lower in sugar, calories, or overall nutritional quality.'
+      },
       {
         ids: [2, 9],
         explanation: '"9 g protein per bar" and "energy bars" together highlight protein and energy as selling points that can encourage consumers to view the bar as a strong protein option, even though it also contains 16 g of added sugars and 260 calories, resulting in a relatively poor to moderate protein-to-calorie and protein-to-sugar ratio for a product marketed as an energy or protein-focused snack.'
