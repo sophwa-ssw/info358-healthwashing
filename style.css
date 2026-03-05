@@ -545,6 +545,12 @@ body {
   pointer-events: none;
 }
 
+/* Front image scales with wrapper like extra images, so annotations align at all screen sizes */
+.image-container .extra-img-wrapper .extra-zoom-inner img {
+  width: 100%;
+  height: auto;
+}
+
 .hotspot {
   position: absolute;
   border: 2px dashed rgba(255, 255, 255, 0.5);
