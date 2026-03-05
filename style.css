@@ -173,6 +173,11 @@ body {
   min-width: 0;
 }
 
+.images-row.images-row--equal-panels .image-container,
+.images-row.images-row--equal-panels .extra-images {
+  flex: 1;
+}
+
 .extra-img-wrapper {
   position: relative;
   flex: 1;
@@ -310,6 +315,101 @@ body {
   fill: #fff;
 }
 
+/* Front image annotations match extra-image style for light-background products (e.g. Activia) */
+.modal-overlay.product-activia-yogurt .image-container .hotspot {
+  border: 2px dashed rgba(80, 80, 80, 0.7);
+}
+
+.modal-overlay.product-activia-yogurt .image-container .hotspot.selected {
+  background: rgba(231, 76, 60, 0.2);
+  border-color: #e74c3c;
+  border-style: solid;
+}
+
+.modal-overlay.product-activia-yogurt .image-container .hotspot.grouping {
+  background: rgba(142, 68, 173, 0.2);
+  border: 2px dashed #8e44ad;
+}
+
+.modal-overlay.product-activia-yogurt .image-container .hotspot.grouped {
+  background: rgba(142, 68, 173, 0.25);
+  border: 2px solid #8e44ad;
+}
+
+.modal-overlay.product-activia-yogurt .image-container .hotspot:hover,
+.modal-overlay.product-activia-yogurt .image-container .hotspot.hovered,
+.modal-overlay.product-activia-yogurt .image-container .hotspot.selected.hovered,
+.modal-overlay.product-activia-yogurt .image-container .hotspot.grouped.hovered,
+.modal-overlay.product-activia-yogurt .image-container .hotspot.selected.grouped.hovered {
+  background: rgba(200, 170, 0, 0.25);
+  border-color: rgba(180, 150, 0, 0.9);
+}
+
+.modal-overlay.product-activia-yogurt .image-container .hotspot.selected.grouped {
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.25) 50%, rgba(142, 68, 173, 0.25) 50%);
+  border: 2px solid;
+  border-image: linear-gradient(135deg, #e74c3c 50%, #8e44ad 50%) 1;
+}
+
+.modal-overlay.product-activia-yogurt .image-container .leader-line {
+  stroke: rgba(80, 80, 80, 0.7);
+}
+
+.modal-overlay.product-activia-yogurt .image-container .leader-line.hovered {
+  stroke: rgba(180, 150, 0, 0.9);
+}
+
+.modal-overlay.product-activia-yogurt .image-container .leader-number circle {
+  fill: transparent;
+  stroke: rgba(80, 80, 80, 0.7);
+}
+
+.modal-overlay.product-activia-yogurt .image-container .leader-number text {
+  fill: rgba(60, 60, 60, 0.85);
+}
+
+.modal-overlay.product-activia-yogurt .image-container .leader-number.hovered circle {
+  stroke: rgba(180, 150, 0, 0.9);
+}
+
+.modal-overlay.product-activia-yogurt .image-container .leader-number.hovered text {
+  fill: rgba(150, 120, 0, 1);
+}
+
+.modal-overlay.product-activia-yogurt .image-container .leader-line.grouping,
+.modal-overlay.product-activia-yogurt .image-container .leader-line.grouped {
+  stroke: #8e44ad;
+}
+
+.modal-overlay.product-activia-yogurt .image-container .leader-number.grouping circle,
+.modal-overlay.product-activia-yogurt .image-container .leader-number.grouped circle {
+  fill: rgba(142, 68, 173, 0.45);
+  stroke: #8e44ad;
+}
+
+.modal-overlay.product-activia-yogurt .image-container .leader-number.grouping text,
+.modal-overlay.product-activia-yogurt .image-container .leader-number.grouped text {
+  fill: #fff;
+}
+
+.modal-overlay.product-activia-yogurt .image-container .leader-number.selected circle {
+  fill: rgba(231, 76, 60, 0.5);
+  stroke: #e74c3c;
+}
+
+.modal-overlay.product-activia-yogurt .image-container .leader-number.selected text {
+  fill: #fff;
+}
+
+.modal-overlay.product-activia-yogurt .image-container .leader-number.selected.grouped circle {
+  fill: rgba(142, 68, 173, 0.4);
+  stroke: #e74c3c;
+}
+
+.modal-overlay.product-activia-yogurt .image-container .leader-number.selected.grouped text {
+  fill: #fff;
+}
+
 /* ── Reasoning Inputs ── */
 
 .reasoning-area {
@@ -402,6 +502,9 @@ body {
   overflow: hidden;
   border-radius: 8px;
   cursor: default;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 .image-container.zoomed {
@@ -418,16 +521,18 @@ body {
 
 .zoom-inner {
   position: relative;
-  transition: transform 0.3s ease;
+  display: inline-block;
+  max-height: min(380px, 50vh);
   transition: transform 0.3s ease;
   transform-origin: center center;
   overflow: hidden;
 }
 
 .image-container img {
-  width: 100%;
-  height: auto;
   display: block;
+  max-height: min(380px, 50vh);
+  width: auto;
+  height: auto;
   -webkit-user-drag: none;
   pointer-events: none;
 }

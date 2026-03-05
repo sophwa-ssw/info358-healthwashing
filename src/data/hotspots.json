@@ -63,14 +63,172 @@
       }
     ]
   },
-  "item-2": {
-    "front": [],
-    "ingredients": [],
+  "cliff-bar": {
+    "front": [
+      {
+        "id": "sustained-energy",
+        "left": 35.9,
+        "top": 62.9,
+        "width": 30.8,
+        "height": 13.8
+      },
+      {
+        "id": "9g-protein",
+        "left": 9.4,
+        "top": 66.3,
+        "width": 23.4,
+        "height": 8.9
+      },
+      {
+        "id": "cliff-bar-logo",
+        "left": 8.5,
+        "top": 15,
+        "width": 19.6,
+        "height": 40.2
+      },
+      {
+        "id": "dude-climbing-cliff",
+        "left": 53,
+        "top": 15.3,
+        "width": 40.1,
+        "height": 33.4
+      },
+      {
+        "id": "energy-bars",
+        "left": 3.1,
+        "top": 88.4,
+        "width": 38.7,
+        "height": 11.1
+      },
+      {
+        "id": "non-gmo",
+        "left": 75.8,
+        "top": 86.7,
+        "width": 23.2,
+        "height": 11.9
+      },
+      {
+        "id": "org-oats",
+        "left": 68.8,
+        "top": 65.7,
+        "width": 28.4,
+        "height": 8.4
+      },
+      {
+        "id": "bar-flavor",
+        "left": 25,
+        "top": 76.1,
+        "width": 52,
+        "height": 12.2
+      }
+    ],
+    "ingredients": [
+      {
+        "id": "nutrition-info",
+        "left": 15.1,
+        "top": 1.1,
+        "width": 68,
+        "height": 80.4
+      },
+      {
+        "id": "ingred-info",
+        "left": 15.5,
+        "top": 80.6,
+        "width": 82.5,
+        "height": 18.3
+      }
+    ],
     "nutrition": []
   },
-  "item-3": {
-    "front": [],
-    "ingredients": [],
+  "activia-yogurt": {
+    "front": [
+      {
+        "id": "low-fat",
+        "left": 38.4,
+        "top": 74,
+        "width": 17.1,
+        "height": 6.6
+      },
+      {
+        "id": "3-benefits",
+        "left": 21.3,
+        "top": 54.7,
+        "width": 26.9,
+        "height": 18.2
+      },
+      {
+        "id": "activia-supports-gut-health",
+        "left": 22.3,
+        "top": 31.6,
+        "width": 50.3,
+        "height": 22.7
+      },
+      {
+        "id": "fruit-img",
+        "left": 75.4,
+        "top": 73.2,
+        "width": 21.3,
+        "height": 15.4
+      }
+    ],
+    "ingredients": [
+      {
+        "id": "non-gmo",
+        "left": 12.9,
+        "top": 6.4,
+        "width": 10.5,
+        "height": 9.3
+      },
+      {
+        "id": "3-benefits",
+        "left": 14.5,
+        "top": 17.7,
+        "width": 20.7,
+        "height": 21.1
+      },
+      {
+        "id": "backed-by-science",
+        "left": 13.2,
+        "top": 39.3,
+        "width": 27.7,
+        "height": 9.1
+      },
+      {
+        "id": "gut-health-research-blurb",
+        "left": 13.5,
+        "top": 50.1,
+        "width": 27,
+        "height": 14.7
+      },
+      {
+        "id": "icons",
+        "left": 14.8,
+        "top": 64.5,
+        "width": 26.4,
+        "height": 12.6
+      },
+      {
+        "id": "nutrition",
+        "left": 39.9,
+        "top": 17.9,
+        "width": 33.7,
+        "height": 66.6
+      },
+      {
+        "id": "ingred-list",
+        "left": 72.7,
+        "top": 17.2,
+        "width": 15.5,
+        "height": 29.3
+      },
+      {
+        "id": "reduce frequency",
+        "left": 73,
+        "top": 59.8,
+        "width": 14.1,
+        "height": 17.5
+      }
+    ],
     "nutrition": []
   }
 }

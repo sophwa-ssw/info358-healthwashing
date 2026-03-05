@@ -252,6 +252,9 @@ export class StoreScene extends Phaser.Scene {
     this.phaseReveal.classList.add('hidden');
     this.phaseEmpty.classList.add('hidden');
 
+    this.modalEl.classList.remove(...Array.from(this.modalEl.classList).filter(c => c.startsWith('product-')));
+    this.modalEl.classList.add('product-' + productData.id);
+
     if (!productData.images) {
       this.phaseEmpty.classList.remove('hidden');
       this.modalEl.classList.remove('hidden');
@@ -277,10 +280,22 @@ export class StoreScene extends Phaser.Scene {
   buildExtraImages(images, hs) {
     const container = document.getElementById('extra-images');
     container.innerHTML = '';
-    const pairs = [
+    const entries = [
       { src: images.ingredients, hotspots: hs.ingredients || [] },
       { src: images.nutrition, hotspots: hs.nutrition || [] }
     ];
+    const bySrc = new Map();
+    for (const { src, hotspots } of entries) {
+      if (!src) continue;
+      if (!bySrc.has(src)) bySrc.set(src, { src, hotspots: [] });
+      bySrc.get(src).hotspots.push(...hotspots);
+    }
+    const pairs = Array.from(bySrc.values());
+    if (pairs.length === 1) {
+      this.imagesRow.classList.add('images-row--equal-panels');
+    } else {
+      this.imagesRow.classList.remove('images-row--equal-panels');
+    }
     pairs.forEach(({ src, hotspots }) => {
       if (!src) return;
       const wrapper = document.createElement('div');
@@ -1023,6 +1038,7 @@ export class StoreScene extends Phaser.Scene {
   }
 
   closeModal() {
+    this.modalEl.classList.remove(...Array.from(this.modalEl.classList).filter(c => c.startsWith('product-')));
     this.modalEl.classList.add('hidden');
     this.modalOpen = false;
     this.inReveal = false;
