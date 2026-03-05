@@ -7,6 +7,11 @@ const config = {
   height: 600,
   parent: 'game-container',
   backgroundColor: '#f0ece2',
+  input: {
+    keyboard: {
+      capture: []
+    }
+  },
   physics: {
     default: 'arcade',
     arcade: {

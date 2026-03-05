@@ -102,6 +102,7 @@ export class StoreScene extends Phaser.Scene {
     this.phaseReveal = document.getElementById('phase-reveal');
     this.phaseEmpty = document.getElementById('phase-empty');
     this.imageContainer = document.getElementById('image-container');
+    this.frontImgWrapper = document.getElementById('front-img-wrapper');
     this.imagesRow = document.querySelector('.images-row');
     this.splitter = document.getElementById('modal-splitter');
     this.modalImage = document.getElementById('modal-image');
@@ -138,7 +139,7 @@ export class StoreScene extends Phaser.Scene {
   }
 
   setupZoom() {
-    const container = this.imageContainer;
+    const container = this.frontImgWrapper;
     const inner = document.getElementById('zoom-inner');
     this.zoomed = false;
     this.panState = null;
@@ -221,6 +222,7 @@ export class StoreScene extends Phaser.Scene {
       if (!dragging) return;
       dragging = false;
       document.body.style.cursor = '';
+      if (this.modalOpen) this.updateLeaderCircleAspectRatios();
     };
 
     this.splitter.addEventListener('mousedown', (e) => {
@@ -258,6 +260,14 @@ export class StoreScene extends Phaser.Scene {
     this.modalEl.classList.remove(...Array.from(this.modalEl.classList).filter(c => c.startsWith('product-')));
     this.modalEl.classList.add('product-' + productData.id);
 
+    const Keys = Phaser.Input.Keyboard.KeyCodes;
+    this._capturedKeys = [Keys.W, Keys.A, Keys.S, Keys.D, Keys.SPACE, Keys.UP, Keys.DOWN, Keys.LEFT, Keys.RIGHT];
+    this.input.keyboard.removeCapture(this._capturedKeys);
+
+    if (document.activeElement && document.activeElement.closest?.('#game-container')) {
+      document.activeElement.blur();
+    }
+
     if (!productData.images) {
       this.phaseEmpty.classList.remove('hidden');
       this.modalEl.classList.remove('hidden');
@@ -277,6 +287,36 @@ export class StoreScene extends Phaser.Scene {
 
     this.time.delayedCall(50, () => {
       if (this.imagesRow) this.imagesRowNaturalHeight = this.imagesRow.getBoundingClientRect().height;
+      this.updateLeaderCircleAspectRatios();
+      this._leaderResizeObserver?.disconnect();
+      this._leaderResizeObserver = new ResizeObserver(() => this.updateLeaderCircleAspectRatios());
+      if (this.imagesRow) this._leaderResizeObserver.observe(this.imagesRow);
+    });
+  }
+
+  updateLeaderCircleAspectRatios() {
+    const baseR = 1.8;
+    this.modalEl.querySelectorAll('.leader-overlay').forEach((svg) => {
+      const rect = svg.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      if (w <= 0 || h <= 0) return;
+      const minSvg = Math.min(w, h);
+      const wrapper = svg.closest('.extra-img-wrapper');
+      let effectiveMin = minSvg;
+      if (wrapper) {
+        const wr = wrapper.getBoundingClientRect();
+        const minWrap = Math.min(wr.width, wr.height);
+        if (minWrap > 0) {
+          effectiveMin = Math.min(minWrap, minSvg * 2);
+        }
+      }
+      const rx = (baseR * effectiveMin) / w;
+      const ry = (baseR * effectiveMin) / h;
+      svg.querySelectorAll('.leader-number ellipse').forEach((el) => {
+        el.setAttribute('rx', String(rx));
+        el.setAttribute('ry', String(ry));
+      });
     });
   }
 
@@ -483,12 +523,13 @@ export class StoreScene extends Phaser.Scene {
       g.dataset.index = globalIdx;
       g.dataset.id = h.id;
 
-      const circle = document.createElementNS(NS, 'circle');
-      circle.setAttribute('cx', best.nx);
-      circle.setAttribute('cy', best.ny);
-      circle.setAttribute('r', String(r));
-      circle.setAttribute('vector-effect', 'non-scaling-stroke');
-      g.appendChild(circle);
+      const ellipse = document.createElementNS(NS, 'ellipse');
+      ellipse.setAttribute('cx', best.nx);
+      ellipse.setAttribute('cy', best.ny);
+      ellipse.setAttribute('rx', String(r));
+      ellipse.setAttribute('ry', String(r));
+      ellipse.setAttribute('vector-effect', 'non-scaling-stroke');
+      g.appendChild(ellipse);
 
       const text = document.createElementNS(NS, 'text');
       text.setAttribute('x', best.nx);
@@ -512,13 +553,13 @@ export class StoreScene extends Phaser.Scene {
   buildHotspots(hotspots) {
     const zoomInner = document.getElementById('zoom-inner');
     zoomInner.querySelectorAll('.hotspot').forEach(el => el.remove());
-    const oldSvg = this.imageContainer.querySelector('.leader-overlay') || zoomInner.querySelector('.leader-overlay');
+    const oldSvg = this.frontImgWrapper.querySelector('.leader-overlay') || zoomInner.querySelector('.leader-overlay');
     if (oldSvg) oldSvg.remove();
 
     this.zoomed = false;
     zoomInner.style.transform = 'scale(1)';
     zoomInner.style.transformOrigin = 'center center';
-    this.imageContainer.classList.remove('zoomed');
+    this.frontImgWrapper.classList.remove('zoomed');
 
     const NS = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(NS, 'svg');
@@ -563,7 +604,7 @@ export class StoreScene extends Phaser.Scene {
       });
 
       zoomInner.appendChild(div);
-      this.allHotspotRefs.push({ id: hs.id, el: div, container: this.imageContainer });
+      this.allHotspotRefs.push({ id: hs.id, el: div, container: this.frontImgWrapper });
 
       const cx = hs.left + hs.width / 2;
       const cy = hs.top + hs.height / 2;
@@ -630,12 +671,13 @@ export class StoreScene extends Phaser.Scene {
       g.dataset.index = index;
       g.dataset.id = hs.id;
 
-      const circle = document.createElementNS(NS, 'circle');
-      circle.setAttribute('cx', best.nx);
-      circle.setAttribute('cy', best.ny);
-      circle.setAttribute('r', String(r));
-      circle.setAttribute('vector-effect', 'non-scaling-stroke');
-      g.appendChild(circle);
+      const ellipse = document.createElementNS(NS, 'ellipse');
+      ellipse.setAttribute('cx', best.nx);
+      ellipse.setAttribute('cy', best.ny);
+      ellipse.setAttribute('rx', String(r));
+      ellipse.setAttribute('ry', String(r));
+      ellipse.setAttribute('vector-effect', 'non-scaling-stroke');
+      g.appendChild(ellipse);
 
       const text = document.createElementNS(NS, 'text');
       text.setAttribute('x', best.nx);
@@ -895,7 +937,6 @@ export class StoreScene extends Phaser.Scene {
     this.inReveal = true;
 
     // Disable direct hotspot interaction but keep zoom/pan
-    this.imageContainer.classList.add('in-reveal');
     document.querySelectorAll('.extra-img-wrapper').forEach(w => w.classList.add('in-reveal'));
 
     this.buildRevealUser(data);
@@ -1070,8 +1111,12 @@ export class StoreScene extends Phaser.Scene {
     this.pendingGroup = [];
     this.hotspotGroupMap = {};
     document.getElementById('extra-images').innerHTML = '';
-    this.imageContainer.classList.remove('in-reveal');
     document.querySelectorAll('.extra-img-wrapper').forEach(w => w.classList.remove('in-reveal'));
+    this._leaderResizeObserver?.disconnect();
+    this._leaderResizeObserver = null;
+    if (this._capturedKeys) {
+      this.input.keyboard.addCapture(this._capturedKeys);
+    }
     this.revealUser.innerHTML = '';
     this.revealOurs.innerHTML = '';
     if (this.imagesRow) this.imagesRow.style.height = '';

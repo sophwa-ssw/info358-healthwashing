@@ -9,13 +9,6 @@ export class IntroScene extends Phaser.Scene {
 
     this.add.rectangle(400, 300, width, height, 0xf5f0e1);
 
-    const title = this.add.text(0, 0, 'Healthwashing', {
-      fontSize: '32px',
-      fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
-      color: '#2d3436',
-      fontStyle: 'bold'
-    }).setOrigin(0.5, 0);
-
     const paragraph1 = this.add.text(0, 0, 'Walking into a grocery store can feel overwhelming for young adults, especially when trying to make healthier choices in an unfamiliar environment like a new college campus. Store shelves are filled from top to bottom with packaged products that claim to provide a variety of health benefits, making it difficult to know which options to choose and which claims to trust. With marketing techniques like healthwashing, it can become confusing to know what benefits you are actually receiving from the food you eat.', {
       fontSize: '14px',
       fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
@@ -35,16 +28,14 @@ export class IntroScene extends Phaser.Scene {
     }).setOrigin(0.5, 0);
 
     const gap = 24;
-    const totalHeight = title.height + gap + paragraph1.height + gap + paragraph2.height;
+    const totalHeight = paragraph1.height + gap + paragraph2.height;
     const topY = -totalHeight / 2;
 
     const content = this.add.container(width / 2, height / 2);
-    content.add(title);
-    title.setPosition(0, topY);
     content.add(paragraph1);
-    paragraph1.setPosition(0, topY + title.height + gap);
+    paragraph1.setPosition(0, topY);
     content.add(paragraph2);
-    paragraph2.setPosition(0, topY + title.height + gap + paragraph1.height + gap);
+    paragraph2.setPosition(0, topY + paragraph1.height + gap);
 
     const btnBg = this.add.graphics();
     btnBg.fillStyle(0x00b894, 1);
