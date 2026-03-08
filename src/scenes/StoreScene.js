@@ -9,6 +9,10 @@ export class StoreScene extends Phaser.Scene {
     this.modalCooldown = false;
   }
 
+  preload() {
+    this.load.image('player', 'assets/graphics/info358_topdown.png');
+  }
+
   create() {
     this.hotspotsData = {};
     this.drawStore();
@@ -54,13 +58,9 @@ export class StoreScene extends Phaser.Scene {
   /* ── Player ── */
 
   createPlayer() {
-    const pg = this.make.graphics({ add: false });
-    pg.fillStyle(0x636e72, 1);
-    pg.fillCircle(16, 16, 16);
-    pg.generateTexture('player', 32, 32);
-    pg.destroy();
-
     this.player = this.add.sprite(400, 550, 'player');
+    this.player.setDisplaySize(150, 150);
+    this.player.setDepth(1000);
     this.playerSpeed = 160;
   }
 
