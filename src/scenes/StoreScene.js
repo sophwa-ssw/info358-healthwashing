@@ -1130,45 +1130,53 @@ export class StoreScene extends Phaser.Scene {
   /* ── HUD ── */
 
   setupHUD() {
-    const panelX = 700;
-    const panelW = 180;
-    const panelH = 560;
-    const panelY = 20;
+    // Bottom-right corner; avoids player (400, 550) and products (200,500), (300,250), (550,400)
+    const panelW = 190;
+    const panelH = 165;
+    const panelLeft = 800 - panelW - 10;
+    const panelY = 600 - panelH - 10;
     const depth = 1001;
 
     const bg = this.add.graphics();
     bg.fillStyle(0xffffff, 0.95);
     bg.lineStyle(2, 0x636e72, 0.6);
-    bg.fillRoundedRect(panelX - panelW / 2, panelY, panelW, panelH, 8);
-    bg.strokeRoundedRect(panelX - panelW / 2, panelY, panelW, panelH, 8);
+    bg.fillRoundedRect(panelLeft, panelY, panelW, panelH, 8);
+    bg.strokeRoundedRect(panelLeft, panelY, panelW, panelH, 8);
     bg.setDepth(depth);
 
-    const title = this.add.text(panelX, panelY + 22, 'Shopping list', {
-      fontSize: '14px',
+    const title = this.add.text(panelLeft + panelW / 2, panelY + 14, 'Shopping list', {
+      fontSize: '13px',
       fontFamily: 'Segoe UI, sans-serif',
       color: '#2d3436',
       fontStyle: 'bold'
     }).setOrigin(0.5, 0).setDepth(depth);
 
-    const rowHeight = 100;
-    const left = panelX - panelW / 2 + 12;
-    const boxSize = 14;
-    const labelStyle = { fontSize: '11px', fontFamily: 'sans-serif', color: '#2d3436' };
+    const left = panelLeft + 10;
+    const rowHeight = 38;
+    const boxSize = 12;
+    const labelStyle = { fontSize: '10px', fontFamily: 'sans-serif', color: '#2d3436' };
+
+    // Header row: Buy / Don't buy at top, with padding below so it doesn't overlap first row
+    const headerY = panelY + 32;
+    const headerToFirstRowPadding = 14;
+    const buyColX = panelLeft + panelW - 70;
+    const dontBuyColX = panelLeft + panelW - 32;
+    this.add.text(buyColX, headerY - 2, 'Buy', { ...labelStyle, fontStyle: 'bold' }).setOrigin(0, 0).setDepth(depth);
+    this.add.text(dontBuyColX, headerY - 2, "Don't", { ...labelStyle, fontStyle: 'bold' }).setOrigin(0, 0).setDepth(depth);
 
     this.shoppingListRows = [];
 
     productsData.forEach((product, index) => {
-      const rowY = panelY + 52 + index * rowHeight;
+      const rowY = headerY + headerToFirstRowPadding + index * rowHeight;
+      const boxY = rowY - 2;
 
-      const nameText = this.add.text(left, rowY, product.name, {
+      const nameText = this.add.text(left, rowY - 2, product.name, {
         ...labelStyle,
-        fontSize: '10px',
-        wordWrap: { width: panelW - 24 }
+        fontSize: '10px'
       }).setOrigin(0, 0).setDepth(depth);
 
-      const buyBoxX = left;
-      const dontBuyBoxX = left + 72;
-      const boxY = rowY + 28;
+      const buyBoxX = buyColX - 2;
+      const dontBuyBoxX = dontBuyColX - 2;
 
       const buyGraphic = this.add.graphics().setDepth(depth);
       const dontBuyGraphic = this.add.graphics().setDepth(depth);
@@ -1192,12 +1200,10 @@ export class StoreScene extends Phaser.Scene {
 
       drawRowCheckboxes();
 
-      const buyLabel = this.add.text(buyBoxX + boxSize + 4, boxY + 2, 'Buy', labelStyle).setOrigin(0, 0).setDepth(depth);
-      const dontBuyLabel = this.add.text(dontBuyBoxX + boxSize + 4, boxY + 2, "Don't buy", labelStyle).setOrigin(0, 0).setDepth(depth);
-
-      const hitH = boxSize + 8;
-      const buyZone = this.add.zone(buyBoxX, boxY, boxSize + 50, hitH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(depth);
-      const dontBuyZone = this.add.zone(dontBuyBoxX, boxY, boxSize + 52, hitH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(depth);
+      const hitH = boxSize + 6;
+      const hitW = 28;
+      const buyZone = this.add.zone(buyBoxX, boxY, hitW, hitH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(depth);
+      const dontBuyZone = this.add.zone(dontBuyBoxX, boxY, hitW, hitH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(depth);
 
       buyZone.on('pointerdown', () => {
         this.shoppingChoices[product.id] = 'buy';
