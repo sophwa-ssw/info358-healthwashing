@@ -2,7 +2,7 @@ export const productsData = [
   {
     id: 'vitaminwater',
     name: 'Vitaminwater Power-C',
-    position: { x: 300, y: 250 },
+    position: { x: 595, y: 190 },
     color: 0xe17055,
     images: {
       front: 'assets/products/vitaminwater/71EdjN9TJKL._SL1500_.jpg',
@@ -30,7 +30,7 @@ export const productsData = [
   {
     id: 'cliff-bar',
     name: 'Cliff Bar',
-    position: { x: 550, y: 400 },
+    position: { x: 300, y: 500 },
     color: 0xfdcb6e,
     images: {
       front: 'assets/products/cliff-bar/image10.png',

@@ -1,6 +1,6 @@
 import { productsData } from '../data/products.js';
 
-const TRIGGER_DISTANCE = 100;
+const TRIGGER_DISTANCE = 120;
 
 export class StoreScene extends Phaser.Scene {
   constructor() {
@@ -11,6 +11,7 @@ export class StoreScene extends Phaser.Scene {
 
   preload() {
     this.load.image('player', 'assets/graphics/info358_topdown.png');
+    this.load.image('bkg', 'assets/graphics/test_bkg.png');
   }
 
   create() {
@@ -42,16 +43,8 @@ export class StoreScene extends Phaser.Scene {
   /* ── Store Layout ── */
 
   drawStore() {
-    this.add.rectangle(400, 300, 800, 600, 0xf5f0e1);
-
-    const tileGraphics = this.add.graphics();
-    tileGraphics.lineStyle(1, 0xe0dbd0, 0.3);
-    for (let x = 0; x <= 800; x += 50) {
-      tileGraphics.lineBetween(x, 0, x, 600);
-    }
-    for (let y = 0; y <= 600; y += 50) {
-      tileGraphics.lineBetween(0, y, 800, y);
-    }
+    const bkg = this.add.image(400, 300, 'bkg');
+    bkg.setDisplaySize(800, 600);
 
     this.shelves = [];
   }
@@ -1144,7 +1137,7 @@ export class StoreScene extends Phaser.Scene {
     bg.strokeRoundedRect(panelLeft, panelY, panelW, panelH, 8);
     bg.setDepth(depth);
 
-    const title = this.add.text(panelLeft + panelW / 2, panelY + 14, 'Shopping list', {
+    const title = this.add.text(panelLeft + panelW / 2, panelY + 14, 'Shopping List', {
       fontSize: '13px',
       fontFamily: 'Segoe UI, sans-serif',
       color: '#2d3436',
@@ -1158,7 +1151,7 @@ export class StoreScene extends Phaser.Scene {
 
     // Header row: Buy / Don't buy at top, with padding below so it doesn't overlap first row
     const headerY = panelY + 32;
-    const headerToFirstRowPadding = 14;
+    const headerToFirstRowPadding = 20;
     const buyColX = panelLeft + panelW - 70;
     const dontBuyColX = panelLeft + panelW - 32;
     this.add.text(buyColX, headerY - 2, 'Buy', { ...labelStyle, fontStyle: 'bold' }).setOrigin(0, 0).setDepth(depth);
