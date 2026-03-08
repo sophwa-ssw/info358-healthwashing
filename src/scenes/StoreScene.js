@@ -1,6 +1,6 @@
 import { productsData } from '../data/products.js';
 
-const TRIGGER_DISTANCE = 40;
+const TRIGGER_DISTANCE = 100;
 
 export class StoreScene extends Phaser.Scene {
   constructor() {
@@ -15,6 +15,7 @@ export class StoreScene extends Phaser.Scene {
 
   create() {
     this.hotspotsData = {};
+    this.shoppingChoices = {}; // productId -> 'buy' | 'dont_buy'
     this.drawStore();
     this.createPlayer();
     this.createProducts();
@@ -1129,6 +1130,86 @@ export class StoreScene extends Phaser.Scene {
   /* ── HUD ── */
 
   setupHUD() {
+    const panelX = 700;
+    const panelW = 180;
+    const panelH = 560;
+    const panelY = 20;
+    const depth = 1001;
+
+    const bg = this.add.graphics();
+    bg.fillStyle(0xffffff, 0.95);
+    bg.lineStyle(2, 0x636e72, 0.6);
+    bg.fillRoundedRect(panelX - panelW / 2, panelY, panelW, panelH, 8);
+    bg.strokeRoundedRect(panelX - panelW / 2, panelY, panelW, panelH, 8);
+    bg.setDepth(depth);
+
+    const title = this.add.text(panelX, panelY + 22, 'Shopping list', {
+      fontSize: '14px',
+      fontFamily: 'Segoe UI, sans-serif',
+      color: '#2d3436',
+      fontStyle: 'bold'
+    }).setOrigin(0.5, 0).setDepth(depth);
+
+    const rowHeight = 100;
+    const left = panelX - panelW / 2 + 12;
+    const boxSize = 14;
+    const labelStyle = { fontSize: '11px', fontFamily: 'sans-serif', color: '#2d3436' };
+
+    this.shoppingListRows = [];
+
+    productsData.forEach((product, index) => {
+      const rowY = panelY + 52 + index * rowHeight;
+
+      const nameText = this.add.text(left, rowY, product.name, {
+        ...labelStyle,
+        fontSize: '10px',
+        wordWrap: { width: panelW - 24 }
+      }).setOrigin(0, 0).setDepth(depth);
+
+      const buyBoxX = left;
+      const dontBuyBoxX = left + 72;
+      const boxY = rowY + 28;
+
+      const buyGraphic = this.add.graphics().setDepth(depth);
+      const dontBuyGraphic = this.add.graphics().setDepth(depth);
+
+      const drawRowCheckboxes = () => {
+        const choice = this.shoppingChoices[product.id];
+        buyGraphic.clear();
+        dontBuyGraphic.clear();
+
+        [buyGraphic, dontBuyGraphic].forEach((g, i) => {
+          const x = i === 0 ? buyBoxX : dontBuyBoxX;
+          g.lineStyle(1.5, 0x636e72, 0.8);
+          g.strokeRect(x, boxY, boxSize, boxSize);
+          const selected = (i === 0 && choice === 'buy') || (i === 1 && choice === 'dont_buy');
+          if (selected) {
+            g.fillStyle(0x00b894, 0.9);
+            g.fillRect(x + 2, boxY + 2, boxSize - 4, boxSize - 4);
+          }
+        });
+      };
+
+      drawRowCheckboxes();
+
+      const buyLabel = this.add.text(buyBoxX + boxSize + 4, boxY + 2, 'Buy', labelStyle).setOrigin(0, 0).setDepth(depth);
+      const dontBuyLabel = this.add.text(dontBuyBoxX + boxSize + 4, boxY + 2, "Don't buy", labelStyle).setOrigin(0, 0).setDepth(depth);
+
+      const hitH = boxSize + 8;
+      const buyZone = this.add.zone(buyBoxX, boxY, boxSize + 50, hitH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(depth);
+      const dontBuyZone = this.add.zone(dontBuyBoxX, boxY, boxSize + 52, hitH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(depth);
+
+      buyZone.on('pointerdown', () => {
+        this.shoppingChoices[product.id] = 'buy';
+        drawRowCheckboxes();
+      });
+      dontBuyZone.on('pointerdown', () => {
+        this.shoppingChoices[product.id] = 'dont_buy';
+        drawRowCheckboxes();
+      });
+
+      this.shoppingListRows.push({ productId: product.id, drawRowCheckboxes });
+    });
   }
 
   updateHUD() {
