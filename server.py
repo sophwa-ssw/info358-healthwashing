@@ -18,7 +18,7 @@ MONGODB_DB = os.environ.get('MONGODB_DB', 'info358_healthwashing')
 MONGODB_COLLECTION = os.environ.get('MONGODB_COLLECTION', 'checkouts')
 
 ALLOWED_KEYS = {'front', 'ingredients', 'nutrition'}
-ALLOWED_PRODUCTS = {'vitaminwater', 'cliff-bar', 'activia-yogurt'}
+ALLOWED_PRODUCTS = {'vitaminwater', 'cliff-bar', 'activia-yogurt', 'skinny-pop', 'nature-valley-bars'}
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):

@@ -77,5 +77,35 @@ export const productsData = [
       }
     ],
     summary: ''
+  },
+  {
+    id: 'skinny-pop',
+    name: 'Skinny Pop',
+    position: { x: 400, y: 300 },
+    color: 0x00b894,
+    images: {
+      front: 'assets/products/skinny-pop/front.png',
+      ingredients: 'assets/products/skinny-pop/ingred.png',
+      nutrition: 'assets/products/skinny-pop/nutrition.png'
+    },
+    ourPicks: [],
+    explanations: {},
+    ourGroups: [],
+    summary: ''
+  },
+  {
+    id: 'nature-valley-bars',
+    name: 'Nature Valley Bars',
+    position: { x: 500, y: 400 },
+    color: 0xe67e22,
+    images: {
+      front: 'assets/products/nature-valley-bars/front.png',
+      ingredients: 'assets/products/nature-valley-bars/nutrition-and-ingred.png',
+      nutrition: 'assets/products/nature-valley-bars/nutrition-and-ingred.png'
+    },
+    ourPicks: [],
+    explanations: {},
+    ourGroups: [],
+    summary: ''
   }
 ];
