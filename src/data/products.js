@@ -113,9 +113,27 @@ export const productsData = [
       ingredients: 'assets/products/nature-valley-bars/nutrition-and-ingred.png',
       nutrition: 'assets/products/nature-valley-bars/nutrition-and-ingred.png'
     },
-    ourPicks: [],
-    explanations: {},
-    ourGroups: [],
+    ourPicks: [1, 2, 3, 5],
+    explanations: {
+      1: 'The brand name "Nature Valley" and the green color scheme can evoke associations with natural or minimally processed foods. However, the ingredient list includes added sugars, refined oils, and flavoring agents, indicating that the product is a processed packaged snack. Branding that emphasizes natural imagery can influence consumer perception of healthfulness even when the nutritional profile does not strongly support that impression.',
+      3: 'The front of the package advertises the "22g whole grain", which can create the impression that the product is nutritionally balanced or particularly healthy. While whole grains are associated with health benefits, the presence of whole grains does not necessarily make a product healthy. Foods that contain whole grains may still contain substantial amounts of added sugars and refined ingredients, diminishing their nutritional value.'
+    },
+    citations: {
+      1: 'https://www.sciencedirect.com/science/article/pii/S0963996917300668',
+      3: 'https://nutritionsource.hsph.harvard.edu/what-should-you-eat/whole-grains/'
+    },
+    citationMla: {
+      1: 'Asioli, Daniele, et al. "Making sense of the \'clean label\' trends: A review of consumer food choice behavior and discussion of industry implications." <i>Food Research International</i> 99 (2017): 58-71.',
+      3: 'Harvard T.H. Chan School of Public Health. "Whole Grains." The Nutrition Source, 2025, https://nutritionsource.hsph.harvard.edu/what-should-you-eat/whole-grains/.'
+    },
+    ourGroups: [
+      {
+        ids: [2, 5],
+        explanation: 'The packaging emphasizes oats and honey imagery, which may suggest that the product is primarily composed of natural ingredients. However, the ingredient list reveals that multiple added sugars are present, including sugar, brown sugar syrup, and honey. Food manufacturers often use multiple types of sugars to enhance sweetness while making each appear lower in the ingredient list.',
+        citation: 'https://www.sugarnutritionresource.org/the-basics/sugars-on-food-labels',
+        citationMla: 'Dowse, Michelle. "Sugars on Food Labels." Sugar Nutrition Resource Centre. https://www.sugarnutritionresource.org/the-basics/sugars-on-food-labels. Scapin, Tailane, et al. "Influence of sugar label formats on consumer understanding and amount of sugar in food choices: a systematic review and meta-analyses." <i>Nutrition Reviews</i> 79.7 (2021): 788-801.'
+      }
+    ],
     summary: ''
   }
 ];

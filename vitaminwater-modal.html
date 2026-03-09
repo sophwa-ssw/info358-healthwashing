@@ -932,7 +932,7 @@
         for (const num of individualPicks) {
           const explanation = productData.explanations?.[num] || '';
           if (!explanation) continue;
-          entries.push({ nums: [num], explanation, citation: productData.citations?.[num] || '', sortKey: num });
+          entries.push({ nums: [num], explanation, citation: productData.citations?.[num] || '', citationMla: productData.citationMla?.[num] || '', sortKey: num });
         }
         for (const group of ourGroups) {
           entries.push({ nums: [...group.ids].sort((a,b)=>a-b), explanation: group.explanation, citation: group.citation || '', citationMla: group.citationMla || '', sortKey: Math.min(...group.ids), isGroup: true });

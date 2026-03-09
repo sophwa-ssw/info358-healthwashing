@@ -1022,7 +1022,8 @@ export class StoreScene extends Phaser.Scene {
       const explanation = data.explanations?.[num] || '';
       if (!explanation) continue;
       const citation = data.citations?.[num] || '';
-      entries.push({ nums: [num], explanation, citation, sortKey: num });
+      const citationMla = data.citationMla?.[num] || '';
+      entries.push({ nums: [num], explanation, citation, citationMla, sortKey: num });
     }
 
     for (const group of ourGroups) {
