@@ -928,6 +928,72 @@ body {
   text-decoration: underline;
 }
 
+.reveal-citation-dropdown {
+  margin-top: 8px;
+}
+
+.reveal-citation-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.82rem;
+  color: #636e72;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reveal-citation-toggle:hover {
+  color: #0984e3;
+}
+
+.reveal-citation-toggle .arrow {
+  transition: transform 0.2s;
+}
+
+.reveal-citation-dropdown.expanded .reveal-citation-toggle .arrow {
+  transform: rotate(90deg);
+}
+
+.reveal-citation-content {
+  display: none;
+  margin-top: 6px;
+  padding-left: 14px;
+  font-size: 0.72rem;
+  color: #636e72;
+  line-height: 1.5;
+}
+
+.reveal-citation-dropdown.expanded .reveal-citation-content {
+  display: block;
+}
+
+.reveal-citation-content a {
+  color: #0984e3;
+  text-decoration: none;
+}
+
+.reveal-citation-content a:hover {
+  text-decoration: underline;
+}
+
+.reveal-citation-mla {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #636e72;
+  line-height: 1.5;
+}
+
+.reveal-citation-mla a {
+  color: #0984e3;
+  text-decoration: none;
+}
+
+.reveal-citation-mla a:hover {
+  text-decoration: underline;
+}
+
 .reveal-empty {
   color: #636e72;
   font-size: 0.85rem;

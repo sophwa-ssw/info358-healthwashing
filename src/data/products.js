@@ -88,9 +88,19 @@ export const productsData = [
       ingredients: 'assets/products/skinny-pop/ingred.png',
       nutrition: 'assets/products/skinny-pop/nutrition.png'
     },
-    ourPicks: [],
-    explanations: {},
-    ourGroups: [],
+    ourPicks: [1, 5, 8, 9],
+    explanations: {
+      1: 'The brand name "SkinnyPop" frames the product as a food associated with weight control or dieting. This type of labeling can create a health halo effect, where consumers perceive a product as healthier or lower in calories because of branding or implied weight-loss associations, even if the product still contributes meaningful calories and fat per serving. Labels implying health or diet benefits can influence consumers to underestimate calorie content and perceive foods as healthier than they are.'
+    },
+    citations: {},
+    ourGroups: [
+      {
+        ids: [5, 8, 9],
+        explanation: 'The package highlights its short ingredient list to emphasize simplicity and naturalness. While the ingredient list is indeed short, marketing language that highlights simplicity can create the impression that a product is inherently healthier, even though nutritional quality ultimately depends on the overall nutrient profile.',
+        citation: 'https://www.fda.gov/food/nutrition-facts-label/how-understand-and-use-nutrition-facts-label',
+        citationMla: 'U.S. Food and Drug Administration. "How to Understand and Use the Nutrition Facts Label." U.S. Food and Drug Administration, https://www.fda.gov/food/nutrition-facts-label/how-understand-and-use-nutrition-facts-label.'
+      }
+    ],
     summary: ''
   },
   {

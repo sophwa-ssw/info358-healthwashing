@@ -273,6 +273,15 @@
     .reveal-entry-text .no-reason { color: #b2bec3; font-style: italic; }
     .reveal-citation { display: inline-block; margin-top: 6px; font-size: 0.78rem; color: #0984e3; text-decoration: none; font-weight: 600; }
     .reveal-citation:hover { text-decoration: underline; }
+    .reveal-citation-dropdown { margin-top: 8px; }
+    .reveal-citation-toggle { background: none; border: none; padding: 0; font-size: 0.82rem; color: #636e72; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .reveal-citation-toggle:hover { color: #0984e3; }
+    .reveal-citation-toggle .arrow { transition: transform 0.2s; }
+    .reveal-citation-dropdown.expanded .reveal-citation-toggle .arrow { transform: rotate(90deg); }
+    .reveal-citation-content { display: none; margin-top: 6px; padding-left: 14px; font-size: 0.72rem; color: #636e72; line-height: 1.5; }
+    .reveal-citation-dropdown.expanded .reveal-citation-content { display: block; }
+    .reveal-citation-content a { color: #0984e3; text-decoration: none; }
+    .reveal-citation-content a:hover { text-decoration: underline; }
     .reveal-empty { color: #636e72; font-size: 0.85rem; text-align: center; padding: 16px 0; font-style: italic; }
     .reveal-summary { background: #fff3e0; border-left: 4px solid #e17055; border-radius: 8px; padding: 14px 18px; margin-top: 16px; margin-bottom: 8px; font-size: 0.9rem; color: #2d3436; line-height: 1.5; }
   </style>
@@ -926,7 +935,7 @@
           entries.push({ nums: [num], explanation, citation: productData.citations?.[num] || '', sortKey: num });
         }
         for (const group of ourGroups) {
-          entries.push({ nums: [...group.ids].sort((a,b)=>a-b), explanation: group.explanation, sortKey: Math.min(...group.ids), isGroup: true });
+          entries.push({ nums: [...group.ids].sort((a,b)=>a-b), explanation: group.explanation, citation: group.citation || '', citationMla: group.citationMla || '', sortKey: Math.min(...group.ids), isGroup: true });
         }
         entries.sort((a, b) => a.sortKey - b.sortKey);
         if (entries.length === 0) {
@@ -943,8 +952,33 @@
           const text = document.createElement('div');
           text.className = 'reveal-entry-text';
           let html = `<p>${entry.explanation}</p>`;
-          if (entry.citation) html += `<a class="reveal-citation" href="${entry.citation}" target="_blank" rel="noopener">View source ↗</a>`;
+          if (entry.citation || entry.citationMla) {
+            let citationHtml = '';
+            if (entry.citationMla) {
+              const mlaText = entry.citation
+                ? entry.citationMla.replace(entry.citation, '\x00LINK\x00')
+                : entry.citationMla;
+              const parts = mlaText.split('\x00LINK\x00');
+              citationHtml = parts[0] + (entry.citation ? `<a href="${entry.citation}" target="_blank" rel="noopener">${entry.citation}</a>` : '') + (parts[1] || '');
+            } else {
+              citationHtml = `<a href="${entry.citation}" target="_blank" rel="noopener">${entry.citation}</a>`;
+            }
+            html += `
+            <div class="reveal-citation-dropdown">
+              <button class="reveal-citation-toggle" type="button">
+                <span class="arrow">▸</span> Citation
+              </button>
+              <div class="reveal-citation-content">${citationHtml}</div>
+            </div>`;
+          }
           text.innerHTML = html;
+          const dropdown = text.querySelector('.reveal-citation-dropdown');
+          if (dropdown) {
+            dropdown.querySelector('.reveal-citation-toggle').addEventListener('click', (e) => {
+              e.stopPropagation();
+              dropdown.classList.toggle('expanded');
+            });
+          }
           el.appendChild(label);
           el.appendChild(text);
           el.addEventListener('mouseenter', () => highlightRevealHotspots(entry.nums, true));

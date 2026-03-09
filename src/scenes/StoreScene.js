@@ -1027,7 +1027,7 @@ export class StoreScene extends Phaser.Scene {
 
     for (const group of ourGroups) {
       const nums = [...group.ids].sort((a, b) => a - b);
-      entries.push({ nums, explanation: group.explanation, sortKey: Math.min(...nums), isGroup: true });
+      entries.push({ nums, explanation: group.explanation, citation: group.citation || '', citationMla: group.citationMla || '', sortKey: Math.min(...nums), isGroup: true });
     }
 
     entries.sort((a, b) => a.sortKey - b.sortKey);
@@ -1049,10 +1049,34 @@ export class StoreScene extends Phaser.Scene {
       const text = document.createElement('div');
       text.className = 'reveal-entry-text';
       let html = `<p>${entry.explanation}</p>`;
-      if (entry.citation) {
-        html += `<a class="reveal-citation" href="${entry.citation}" target="_blank" rel="noopener">View source ↗</a>`;
+      if (entry.citation || entry.citationMla) {
+        let citationHtml = '';
+        if (entry.citationMla) {
+          const mlaText = entry.citation
+            ? entry.citationMla.replace(entry.citation, `\x00LINK\x00`)
+            : entry.citationMla;
+          const parts = mlaText.split('\x00LINK\x00');
+          citationHtml = parts[0] + (entry.citation ? `<a href="${entry.citation}" target="_blank" rel="noopener">${entry.citation}</a>` : '') + (parts[1] || '');
+        } else {
+          citationHtml = `<a href="${entry.citation}" target="_blank" rel="noopener">${entry.citation}</a>`;
+        }
+        html += `
+          <div class="reveal-citation-dropdown">
+            <button class="reveal-citation-toggle" type="button">
+              <span class="arrow">▸</span> Citation
+            </button>
+            <div class="reveal-citation-content">${citationHtml}</div>
+          </div>`;
       }
       text.innerHTML = html;
+
+      const dropdown = text.querySelector('.reveal-citation-dropdown');
+      if (dropdown) {
+        dropdown.querySelector('.reveal-citation-toggle').addEventListener('click', (e) => {
+          e.stopPropagation();
+          dropdown.classList.toggle('expanded');
+        });
+      }
 
       el.appendChild(label);
       el.appendChild(text);
