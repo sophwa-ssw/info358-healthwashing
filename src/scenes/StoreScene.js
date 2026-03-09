@@ -1124,39 +1124,59 @@ export class StoreScene extends Phaser.Scene {
 
   setupHUD() {
     // Bottom-right corner; avoids player (400, 550) and products (200,500), (300,250), (550,400)
-    const panelW = 190;
-    const panelH = 165;
+    const panelW = 230;
+    const panelH = 205;
     const panelLeft = 800 - panelW - 10;
     const panelY = 600 - panelH - 10;
     const depth = 1001;
+    const collapsedH = 46;
+    this.shoppingListCollapsed = false;
 
     const bg = this.add.graphics();
-    bg.fillStyle(0xffffff, 0.95);
-    bg.lineStyle(2, 0x636e72, 0.6);
-    bg.fillRoundedRect(panelLeft, panelY, panelW, panelH, 8);
-    bg.strokeRoundedRect(panelLeft, panelY, panelW, panelH, 8);
     bg.setDepth(depth);
 
-    const title = this.add.text(panelLeft + panelW / 2, panelY + 14, 'Shopping List', {
-      fontSize: '13px',
-      fontFamily: 'Segoe UI, sans-serif',
+    const titleBox = this.add.graphics().setDepth(depth);
+
+    const title = this.add.text(800 - panelW + 55, panelY + 14, 'Shopping List', {
+      fontSize: '14px',
+      fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
       color: '#2d3436',
+      lineSpacing: 4,
+      fontStyle: 'bold'
+    }).setOrigin(0.5, 0).setDepth(depth);
+
+    const toggle = this.add.graphics().setDepth(depth);
+    const toggleZone = this.add.zone(panelLeft + panelW - 30, panelY + 10, 20, 20)
+      .setOrigin(0, 0)
+      .setInteractive({ useHandCursor: true })
+      .setDepth(depth);
+
+    const buyTitle = this.add.text(800 - panelW + 165, panelY + 14, 'Buy?', {
+      fontSize: '14px',
+      fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+      color: '#2d3436',
+      lineSpacing: 4,
       fontStyle: 'bold'
     }).setOrigin(0.5, 0).setDepth(depth);
 
     const left = panelLeft + 10;
-    const rowHeight = 38;
+    const rowHeight = 25;
     const boxSize = 12;
-    const labelStyle = { fontSize: '10px', fontFamily: 'sans-serif', color: '#2d3436' };
+    const labelStyle = { fontSize: '12px', fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif', color: '#2d3436' };
 
     // Header row: Buy / Don't buy at top, with padding below so it doesn't overlap first row
     const headerY = panelY + 32;
-    const headerToFirstRowPadding = 20;
-    const buyColX = panelLeft + panelW - 70;
-    const dontBuyColX = panelLeft + panelW - 32;
-    this.add.text(buyColX, headerY - 2, 'Buy', { ...labelStyle, fontStyle: 'bold' }).setOrigin(0, 0).setDepth(depth);
-    this.add.text(dontBuyColX, headerY - 2, "Don't", { ...labelStyle, fontStyle: 'bold' }).setOrigin(0, 0).setDepth(depth);
+    const headerToFirstRowPadding = 25;
+    const buyColX = panelLeft + panelW - 80;
+    const dontBuyColX = panelLeft + panelW - 40;
+    const dividerX = buyColX - 12;
+    const divider = this.add.graphics().setDepth(depth);
+    divider.lineStyle(1.5, 0x636e72, 0.35);
+    divider.lineBetween(dividerX, headerY + 2, dividerX, panelY + panelH - 54);
+    const yesHeader = this.add.text(buyColX, headerY + 5, 'Y', { ...labelStyle }).setOrigin(0, 0).setDepth(depth);
+    const noHeader = this.add.text(dontBuyColX, headerY + 5, 'N', { ...labelStyle }).setOrigin(0, 0).setDepth(depth);
 
+    this.shoppingListCollapsible = [buyTitle, divider, yesHeader, noHeader];
     this.shoppingListRows = [];
 
     productsData.forEach((product, index) => {
@@ -1165,7 +1185,7 @@ export class StoreScene extends Phaser.Scene {
 
       const nameText = this.add.text(left, rowY - 2, product.name, {
         ...labelStyle,
-        fontSize: '10px'
+        fontSize: '12px'
       }).setOrigin(0, 0).setDepth(depth);
 
       const buyBoxX = buyColX - 2;
@@ -1199,19 +1219,195 @@ export class StoreScene extends Phaser.Scene {
       const dontBuyZone = this.add.zone(dontBuyBoxX, boxY, hitW, hitH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(depth);
 
       buyZone.on('pointerdown', () => {
-        this.shoppingChoices[product.id] = 'buy';
+        this.shoppingChoices[product.id] = this.shoppingChoices[product.id] === 'buy' ? null : 'buy';
         drawRowCheckboxes();
+        this.updateCheckoutButtonState();
       });
       dontBuyZone.on('pointerdown', () => {
-        this.shoppingChoices[product.id] = 'dont_buy';
+        this.shoppingChoices[product.id] = this.shoppingChoices[product.id] === 'dont_buy' ? null : 'dont_buy';
         drawRowCheckboxes();
+        this.updateCheckoutButtonState();
       });
 
+      this.shoppingListCollapsible.push(nameText, buyGraphic, dontBuyGraphic, buyZone, dontBuyZone);
       this.shoppingListRows.push({ productId: product.id, drawRowCheckboxes });
     });
+
+    const checkoutButton = this.add.graphics().setDepth(depth);
+    const checkoutLabel = this.add.text(panelLeft + panelW - 52, panelY + panelH - 24, 'Checkout', {
+      fontSize: '11px',
+      fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+      color: '#ffffff',
+      fontStyle: 'bold'
+    }).setOrigin(0.5, 0.5).setDepth(depth);
+    const checkoutZone = this.add.zone(panelLeft + panelW - 94, panelY + panelH - 36, 84, 24)
+      .setOrigin(0, 0)
+      .setDepth(depth);
+
+    this.shoppingListCollapsible.push(checkoutButton, checkoutLabel, checkoutZone);
+
+    this.shoppingListUI = {
+      bg,
+      titleBox,
+      title,
+      toggle,
+      toggleZone,
+      checkoutButton,
+      checkoutLabel,
+      checkoutZone,
+      panelLeft,
+      panelY,
+      panelW,
+      panelH,
+      collapsedH
+    };
+
+    toggleZone.on('pointerdown', () => {
+      this.shoppingListCollapsed = !this.shoppingListCollapsed;
+      this.updateShoppingListVisibility();
+    });
+
+    this.updateShoppingListVisibility();
+    this.updateCheckoutButtonState();
   }
 
   updateHUD() {
+  }
+
+  updateShoppingListVisibility() {
+    if (!this.shoppingListUI) return;
+
+    const {
+      bg,
+      titleBox,
+      title,
+      toggle,
+      toggleZone,
+      checkoutButton,
+      checkoutLabel,
+      checkoutZone,
+      panelLeft,
+      panelY,
+      panelW,
+      panelH,
+      collapsedH
+    } = this.shoppingListUI;
+
+    const isCollapsed = this.shoppingListCollapsed;
+    const currentPanelY = isCollapsed ? panelY + panelH - collapsedH : panelY;
+
+    bg.clear();
+    bg.fillStyle(0xffffff, 0.95);
+    bg.lineStyle(2, 0x636e72, 0.6);
+    bg.fillRoundedRect(panelLeft, currentPanelY, panelW, isCollapsed ? collapsedH : panelH, 8);
+    bg.strokeRoundedRect(panelLeft, currentPanelY, panelW, isCollapsed ? collapsedH : panelH, 8);
+
+    titleBox.clear();
+    titleBox.lineStyle(1.5, 0x636e72, 0.7);
+    titleBox.strokeRoundedRect(panelLeft + 10, currentPanelY + 10, 108, 26, 6);
+
+    title.setPosition(800 - panelW + 50, currentPanelY + 14);
+    toggleZone.setPosition(panelLeft + panelW - 30, currentPanelY + 10);
+    checkoutLabel.setPosition(panelLeft + panelW - 52, currentPanelY + panelH - 24);
+    checkoutZone.setPosition(panelLeft + panelW - 94, currentPanelY + panelH - 36);
+
+    toggle.clear();
+    toggle.fillStyle(0x636e72, 0.85);
+    if (isCollapsed) {
+      toggle.fillTriangle(
+        panelLeft + panelW - 24, currentPanelY + 15,
+        panelLeft + panelW - 24, currentPanelY + 31,
+        panelLeft + panelW - 14, currentPanelY + 23
+      );
+    } else {
+      toggle.fillTriangle(
+        panelLeft + panelW - 26, currentPanelY + 18,
+        panelLeft + panelW - 12, currentPanelY + 18,
+        panelLeft + panelW - 19, currentPanelY + 28
+      );
+    }
+
+    if (this.shoppingListCollapsible) {
+      this.shoppingListCollapsible.forEach(item => item.setVisible(!isCollapsed));
+    }
+
+    this.updateCheckoutButtonState();
+  }
+
+  updateCheckoutButtonState() {
+    if (!this.shoppingListUI) return;
+
+    const {
+      checkoutButton,
+      checkoutLabel,
+      checkoutZone,
+      panelLeft,
+      panelY,
+      panelW,
+      panelH,
+      collapsedH
+    } = this.shoppingListUI;
+
+    const isReady = productsData.every(product => Boolean(this.shoppingChoices[product.id]));
+    const currentPanelY = this.shoppingListCollapsed ? panelY + panelH - collapsedH : panelY;
+    const buttonX = panelLeft + panelW - 94;
+    const buttonY = currentPanelY + panelH - 36;
+    const buttonW = 84;
+    const buttonH = 24;
+
+    checkoutButton.clear();
+    checkoutButton.fillStyle(isReady ? 0x00b894 : 0xb2bec3, 1);
+    checkoutButton.lineStyle(1.5, isReady ? 0x009874 : 0x95a5a6, 0.9);
+    checkoutButton.fillRoundedRect(buttonX, buttonY, buttonW, buttonH, 6);
+    checkoutButton.strokeRoundedRect(buttonX, buttonY, buttonW, buttonH, 6);
+
+    checkoutLabel.setColor(isReady ? '#ffffff' : '#f5f6fa');
+
+    if (this.shoppingListCollapsed) {
+      checkoutZone.disableInteractive();
+      return;
+    }
+
+    checkoutZone.removeAllListeners('pointerdown');
+    if (isReady) {
+      checkoutZone.setInteractive({ useHandCursor: true });
+      checkoutZone.on('pointerdown', () => {
+        this.submitCheckout();
+      });
+    } else {
+      checkoutZone.disableInteractive();
+    }
+  }
+
+  buildCheckoutDocument() {
+    return Object.fromEntries(
+      productsData.map(product => [
+        product.id,
+        this.shoppingChoices[product.id] === 'buy'
+      ])
+    );
+  }
+
+  async submitCheckout() {
+    const payload = this.buildCheckoutDocument();
+
+    try {
+      const response = await fetch('/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || 'Checkout failed');
+      }
+
+      const result = await response.json();
+      console.log('Checkout saved:', result);
+    } catch (error) {
+      console.error('Failed to save checkout:', error);
+    }
   }
 
   /* ── Collision helpers ── */
