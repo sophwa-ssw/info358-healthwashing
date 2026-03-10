@@ -175,5 +175,41 @@ export const productsData = [
       }
     ],
     summary: ''
+  },
+  {
+    id: 'naked-juice',
+    name: 'Naked Juice',
+    position: { x: 550, y: 350 },
+    color: 0xfd79a8,
+    images: {
+      front: 'assets/products/naked-juice/front.png',
+      ingredients: 'assets/products/naked-juice/nutrition+ingred.png',
+      nutrition: 'assets/products/naked-juice/nutrition+ingred.png'
+    },
+    ourPicks: [2, 5, 7, 8, 10],
+    explanations: {
+      2: '"Boosted smoothie" uses wellness-oriented language that suggests added functional benefits such as improved energy, immunity, or nutrition, even though "boosted" is not a regulated nutrition claim under FDA labeling rules and has no standardized definition, making it primarily marketing language rather than a measurable health statement.',
+      5: '"Fiber & 6 Essential Vitamins & Minerals" highlights a few beneficial nutrients in a way that can make the drink appear more nutritious overall, even though this type of nutrient spotlighting can draw attention away from other aspects of the nutrition profile such as its high sugar content.',
+      7: '"No sugar added" can mislead consumers into thinking the product is healthier or lower in sugar than it actually is, even though the bottle contains 50 g of total sugars; in reality, it is simply a regulated nutrient content claim meaning no sugars were added during processing.'
+    },
+    citations: {
+      2: 'https://www.fda.gov/food/dietary-supplements-guidance-documents-regulatory-information/dietary-supplement-labeling-guide-chapter-vi-claims',
+      5: 'https://www.heart.org/en/healthy-living/healthy-eating/eat-smart/nutrition-basics/food-packaging-claims',
+      7: 'https://www.fda.gov/food/nutrition-facts-label/added-sugars-nutrition-facts-label'
+    },
+    citationMla: {
+      2: 'U.S. Food and Drug Administration. "Dietary Supplement Labeling Guide: Claims." U.S. Department of Health and Human Services. https://www.fda.gov/food/dietary-supplements-guidance-documents-regulatory-information/dietary-supplement-labeling-guide-chapter-vi-claims.',
+      5: 'American Heart Association. "Making Sense of Food Packaging Claims." American Heart Association. https://www.heart.org/en/healthy-living/healthy-eating/eat-smart/nutrition-basics/food-packaging-claims.',
+      7: 'U.S. Food and Drug Administration. "Added Sugars on the Nutrition Facts Label." U.S. Department of Health and Human Services. https://www.fda.gov/food/nutrition-facts-label/added-sugars-nutrition-facts-label.'
+    },
+    ourGroups: [
+      {
+        ids: [8, 10],
+        explanation: '"100% juice" and "all sugars come from the fruits" can create a natural health halo that makes the drink seem inherently healthy, even though fruit juice sugars are still classified as free sugars that should be limited; despite this framing, one bottle still contains 50 g of sugar.',
+        citation: 'https://www.ncbi.nlm.nih.gov/books/NBK285538/',
+        citationMla: 'World Health Organization. <i>Guideline: Sugars Intake for Adults and Children</i>. World Health Organization, 2015. NCBI Bookshelf, National Library of Medicine. https://www.ncbi.nlm.nih.gov/books/NBK285538/.'
+      }
+    ],
+    summary: ''
   }
 ];
