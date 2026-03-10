@@ -39,16 +39,29 @@ export const productsData = [
     },
     ourPicks: [1, 2, 6, 7, 9],
     explanations: {
-      1: '"Sustained energy" can create the impression that the product provides a specific or prolonged performance benefit, even though the phrase is not a standardized nutrition claim and provides no measurable definition of what "sustained" means.'
+      1: '"Sustained energy" can create the impression that the product provides a specific or prolonged performance benefit, even though the phrase is not a standardized nutrition claim and provides no measurable definition of what "sustained" means.',
+      6: '"Non-GMO" can make the product appear healthier or higher quality to consumers, even though the Non-GMO Project Verified label only indicates that the product meets standards for avoiding genetically modified ingredients and does not reflect its sugar, calorie, or overall nutritional quality.'
+    },
+    citations: {
+      1: 'https://www.fda.gov/food/food-labeling-nutrition/label-claims-conventional-foods-and-dietary-supplements',
+      6: 'https://www.nap.edu/catalog/23395/genetically-engineered-crops-experiences-and-prospects'
+    },
+    citationMla: {
+      1: 'U.S. Food and Drug Administration. "Label Claims for Conventional Foods and Dietary Supplements." FDA, 2021. https://www.fda.gov/food/food-labeling-nutrition/label-claims-conventional-foods-and-dietary-supplements.',
+      6: 'National Academies of Sciences, Engineering, and Medicine. <i>Genetically Engineered Crops: Experiences and Prospects</i>. National Academies Press, 2016.'
     },
     ourGroups: [
       {
-        ids: [6, 7],
-        explanation: '"Made with organic oats" and the organic seal can make the product seem healthier or more nutritious, even though "organic" refers to how ingredients are grown and processed under USDA standards and does not indicate that the product is lower in sugar, calories, or overall nutritional quality.'
+        ids: [2, 9],
+        explanation: '"9 g protein per bar" highlights protein as a selling point that can encourage consumers to view the bar as a strong protein option, even though it also contains 16 g of added sugars and 260 calories, resulting in a relatively poor to moderate protein-to-calorie and protein-to-sugar ratio for a product marketed as an energy or protein-focused snack.',
+        citation: 'https://www.heart.org/en/healthy-living/healthy-eating/eat-smart/nutrition-basics/food-packaging-claims',
+        citationMla: 'American Heart Association. "Making Sense of Food Packaging Claims." American Heart Association. https://www.heart.org/en/healthy-living/healthy-eating/eat-smart/nutrition-basics/food-packaging-claims.'
       },
       {
-        ids: [2, 9],
-        explanation: '"9 g protein per bar" and "energy bars" together highlight protein and energy as selling points that can encourage consumers to view the bar as a strong protein option, even though it also contains 16 g of added sugars and 260 calories, resulting in a relatively poor to moderate protein-to-calorie and protein-to-sugar ratio for a product marketed as an energy or protein-focused snack.'
+        ids: [6, 7],
+        explanation: '"Made with organic oats" and the organic seal can make the product seem healthier or more nutritious, even though "organic" refers to how ingredients are grown and processed under USDA standards and does not indicate that the product is lower in sugar, calories, or overall nutritional quality.',
+        citation: 'https://www.ams.usda.gov/rules-regulations/organic/labeling',
+        citationMla: 'U.S. Department of Agriculture. "Organic Labeling Standards." USDA Agricultural Marketing Service. https://www.ams.usda.gov/rules-regulations/organic/labeling.'
       }
     ],
     summary: ''
