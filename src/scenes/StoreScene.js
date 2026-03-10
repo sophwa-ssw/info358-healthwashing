@@ -34,10 +34,15 @@ export class StoreScene extends Phaser.Scene {
   }
 
   loadHotspots() {
-    fetch('src/data/hotspots.json')
+    fetch('/get-hotspots')
       .then(r => r.json())
       .then(data => { this.hotspotsData = data; })
-      .catch(() => { this.hotspotsData = {}; });
+      .catch(() => {
+        fetch('src/data/hotspots.json')
+          .then(r => r.json())
+          .then(data => { this.hotspotsData = data; })
+          .catch(() => { this.hotspotsData = {}; });
+      });
   }
 
   /* ── Store Layout ── */
@@ -433,6 +438,7 @@ export class StoreScene extends Phaser.Scene {
       div.style.top = h.top + '%';
       div.style.width = h.width + '%';
       div.style.height = h.height + '%';
+      div.style.zIndex = String(globalIdx + 1);
 
       div.addEventListener('click', (e) => {
         if (this.inReveal) return;
@@ -574,6 +580,7 @@ export class StoreScene extends Phaser.Scene {
       div.style.top = hs.top + '%';
       div.style.width = hs.width + '%';
       div.style.height = hs.height + '%';
+      div.style.zIndex = String(index + 1);
 
       div.addEventListener('click', (e) => {
         if (this.inReveal) return;

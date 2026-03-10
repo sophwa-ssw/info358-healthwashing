@@ -63,17 +63,35 @@ export const productsData = [
       ingredients: 'assets/products/activia-yogurt/image1.png',
       nutrition: 'assets/products/activia-yogurt/image1.png'
     },
-    ourPicks: [3, 5, 7, 11],
+    ourPicks: [2, 3, 5, 6, 7, 8, 12, 17],
     explanations: {
       3: '"Supports gut health" implies a broad digestive health benefit, even though such claims on foods and dietary supplements are not reviewed or approved by the FDA before appearing on labels, meaning companies can use them without submitting evidence of effectiveness to the agency.',
-      5: '"Non-GMO" can make the product appear healthier or higher quality to consumers, even though the Non-GMO Project Verified label only indicates that the product meets standards for avoiding genetically modified ingredients and does not reflect its sugar, calorie, or overall nutritional quality.',
-      7: '"Backed by science" suggests that the product\'s health benefits are strongly supported by scientific evidence, even though the phrase is a general marketing statement and does not indicate what specific studies were conducted, what outcomes were measured, or whether the research directly applies to the product.',
-      11: 'Technical bacterial names such as L. bulgaricus, S. thermophilus, and B. lactis can give the product a scientific or medical impression, even though these are simply the standard cultures used to ferment yogurt.'
+      6: '"Non-GMO" can make the product appear healthier or higher quality to consumers, even though the Non-GMO Project Verified label only indicates that the product meets standards for avoiding genetically modified ingredients and does not reflect its sugar, calorie, or overall nutritional quality.',
+      8: '"Backed by science" suggests that the product\'s health benefits are strongly supported by scientific evidence, even though the phrase is a general marketing statement and does not indicate what specific studies were conducted, what outcomes were measured, or whether the research directly applies to the product.',
+      12: 'In the ingredient list: Technical bacterial names such as L. bulgaricus, S. thermophilus, and B. lactis can give the product a scientific or medical impression, even though these are simply the standard cultures used to ferment yogurt.'
+    },
+    citations: {
+      3: 'https://www.fda.gov/food/nutrition-food-labeling-and-critical-foods/structurefunction-claims',
+      6: 'https://academic.oup.com/advances/article/6/6/842/4555115',
+      12: 'https://nutritionsource.hsph.harvard.edu/food-features/yogurt/'
+    },
+    citationMla: {
+      3: 'U.S. Food and Drug Administration. "Structure/Function Claims." U.S. Food and Drug Administration, 28 Mar. 2024, https://www.fda.gov/food/nutrition-food-labeling-and-critical-foods/structurefunction-claims.',
+      6: 'Wunderlich, Shahla, and Kelsey A. Gatto. "Consumer perception of genetically modified organisms and sources of information." <i>Advances in Nutrition</i> 6.6 (2015): 842-851.',
+      12: 'Harvard T.H. Chan School of Public Health. "Yogurt." The Nutrition Source, 2024, https://nutritionsource.hsph.harvard.edu/food-features/yogurt/.'
     },
     ourGroups: [
       {
-        ids: [2, 6],
-        explanation: '"3 benefits" groups several health-related claims together to make the product appear broadly beneficial, even though the listed benefits (digestive health, probiotics, nutrients) are general statements rather than quantified health outcomes. "Essential daily nutrients" emphasizes the presence of vitamins or minerals to make the yogurt appear nutritionally significant, even though "essential" simply means the body cannot produce those nutrients and they must be obtained from food.'
+        ids: [2, 7],
+        explanation: '"3 benefits" groups several health-related claims together to make the product appear broadly beneficial, even though the listed benefits (digestive health, probiotics, nutrients) are general statements rather than quantified health outcomes.',
+        citation: 'https://doi.org/10.3390/nu8120787',
+        citationMla: 'Talati, Zenobia, et al. "Do Health Claims and Front-of-Pack Labels Lead to a Positivity Bias in Unhealthy Foods?" <i>Nutrients</i> 8.12 (2016): 787. https://doi.org/10.3390/nu8120787.'
+      },
+      {
+        ids: [5, 17],
+        explanation: '"Essential daily nutrients" emphasizes the presence of vitamins or minerals to make the yogurt appear nutritionally significant, even though "essential" simply means the body cannot produce those nutrients and they must be obtained from food.',
+        citation: 'https://ods.od.nih.gov/factsheets/WYNTK-Consumer/',
+        citationMla: 'National Institutes of Health, Office of Dietary Supplements. "Dietary Supplements: What You Need to Know." NIH Office of Dietary Supplements, 4 Jan. 2023, https://ods.od.nih.gov/factsheets/WYNTK-Consumer/.'
       }
     ],
     summary: ''
