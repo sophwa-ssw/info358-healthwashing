@@ -319,6 +319,25 @@ body {
   fill: #fff;
 }
 
+/* Vitamin water front image: light gray bounding boxes and labels for visibility on dark packaging */
+.modal-overlay.product-vitaminwater .image-container .hotspot {
+  border: 2px dashed rgba(180, 180, 180, 0.9);
+}
+
+.modal-overlay.product-vitaminwater .image-container .leader-line {
+  stroke: rgba(180, 180, 180, 0.9);
+}
+
+.modal-overlay.product-vitaminwater .image-container .leader-number circle,
+.modal-overlay.product-vitaminwater .image-container .leader-number ellipse {
+  fill: transparent;
+  stroke: rgba(180, 180, 180, 0.9);
+}
+
+.modal-overlay.product-vitaminwater .image-container .leader-number text {
+  fill: rgba(180, 180, 180, 0.95);
+}
+
 /* Front image annotations match extra-image style for light-background products (e.g. Activia) */
 .modal-overlay.product-activia-yogurt .image-container .hotspot {
   border: 2px dashed rgba(80, 80, 80, 0.7);
