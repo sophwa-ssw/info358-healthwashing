@@ -19,11 +19,20 @@ export const productsData = [
     ourGroups: [
       {
         ids: [4, 5, 8],
-        explanation: 'Prominent micronutrient labeling draws away from primary nutritional content — 27g of carbs, all added sugar (54% DV) — creating a health halo where consumers see the drink as healthy despite high sugar.'
+        explanation: 'Prominent micronutrient labeling draws away from primary nutritional content — 27g of carbs, all added sugar (54% DV) — creating a health halo where consumers see the drink as healthy despite high sugar.',
+        citation: 'https://doi.org/10.1001/jamanetworkopen.2022.36384',
+        citationMla: 'Musicus, Abby A., et al., "Effect of Front-of-Package Information, Fruit Imagery, and High–Added Sugar Warning Labels on Parent Beverage Choices for Children: A Randomized Clinical Trial." <i>JAMA Network Open</i>, vol. 5, no. 10, 2022, e2236384. https://doi.org/10.1001/jamanetworkopen.2022.36384.'
       }
     ],
     citations: {
-      3: 'https://www.fda.gov/regulatory-information/search-fda-guidance-documents/small-entity-compliance-guide-structurefunction-claims'
+      3: 'https://www.fda.gov/regulatory-information/search-fda-guidance-documents/small-entity-compliance-guide-structurefunction-claims',
+      5: 'https://link.gale.com/apps/doc/A334846302/HRCA?u=anon~27d000aa&sid=googleScholar&xid=8dfd2076',
+      7: 'https://www.fda.gov/food/hfp-constituent-updates/fda-releases-final-guidance-regarding-food-labeling-term-evaporated-cane-juice'
+    },
+    citationMla: {
+      3: 'U.S. Food and Drug Administration. "Small Entity Compliance Guide on Structure/Function Claims." U.S. Food and Drug Administration, 10 Nov. 2017, www.fda.gov/regulatory-information/search-fda-guidance-documents/small-entity-compliance-guide-structurefunction-claims.',
+      5: 'Palmer, Sharon. "Beyond the antioxidant buzz: antioxidants are all the rage. Yet the health properties of plant foods, such as fruits, vegetables, grains, and legumes, go beyond mere antioxidant status." <i>Environmental Nutrition</i>, vol. 36, no. 7, July 2013, pp. 1+. Gale OneFile: Health and Medicine, https://link.gale.com/apps/doc/A334846302/HRCA?u=anon~27d000aa&sid=googleScholar&xid=8dfd2076.',
+      7: 'U.S. Food and Drug Administration, Human Foods Program. "FDA Releases Final Guidance Regarding the Food Labeling Term \'Evaporated Cane Juice.\'" U.S. Food and Drug Administration, 1 Feb. 2018, www.fda.gov/food/hfp-constituent-updates/fda-releases-final-guidance-regarding-food-labeling-term-evaporated-cane-juice.'
     },
     summary: ''
   },
