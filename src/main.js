@@ -7,6 +7,10 @@ const config = {
   height: 600,
   parent: 'game-container',
   backgroundColor: '#f0ece2',
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH
+  },
   input: {
     keyboard: {
       capture: []
