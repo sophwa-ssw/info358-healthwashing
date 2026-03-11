@@ -80,12 +80,28 @@ export class StoreScene extends Phaser.Scene {
       const sprite = this.add.sprite(product.position.x, product.position.y, key);
       sprite.setData('productData', product);
 
-      this.add.text(product.position.x, product.position.y + 28, product.name, {
+      const pad = 5;
+      const labelY = product.position.y + 34;
+      const nameText = this.add.text(product.position.x, labelY, product.name, {
         fontSize: '9px',
         fontFamily: 'sans-serif',
         color: '#636e72',
         align: 'center'
       }).setOrigin(0.5);
+
+      const bw = Math.max((nameText.width || 50) + pad * 2, 50);
+      const bh = Math.max((nameText.height || 14) + pad * 2, 22);
+      const bg = this.add.graphics();
+      bg.fillStyle(0xffffff, 0.92);
+      bg.fillRoundedRect(
+        product.position.x - bw / 2,
+        labelY - bh / 2,
+        bw,
+        bh,
+        6
+      );
+      bg.setDepth(0);
+      nameText.setDepth(1);
 
       this.products.push(sprite);
     });
