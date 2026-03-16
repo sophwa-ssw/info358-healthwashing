@@ -3,6 +3,8 @@ node_modules/
 .cursor/
 .venv/
 
+mongo_pwd.txt
+
 __pycache__/
 *.pyc
 *.pyo

@@ -13,7 +13,11 @@ except ImportError:
 PORT = 8080
 ROOT = os.path.dirname(os.path.abspath(__file__))
 HOTSPOTS_FILE = os.path.join(ROOT, 'src', 'data', 'hotspots.json')
-MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/')
+
+# MongoDB Atlas connection settings.
+# Preferred: provide full URI via MONGODB_URI (e.g. from GitHub Secrets).
+# Falls back to local MongoDB for dev if not set.
+MONGODB_URI = os.environ.get('MONGODB_URI') or 'mongodb://localhost:27017/'
 MONGODB_DB = os.environ.get('MONGODB_DB', 'info358_healthwashing')
 MONGODB_COLLECTION = os.environ.get('MONGODB_COLLECTION', 'checkouts')
 
