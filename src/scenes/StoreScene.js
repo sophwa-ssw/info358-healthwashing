@@ -80,12 +80,28 @@ export class StoreScene extends Phaser.Scene {
       const sprite = this.add.sprite(product.position.x, product.position.y, key);
       sprite.setData('productData', product);
 
-      this.add.text(product.position.x, product.position.y + 28, product.name, {
+      const pad = 5;
+      const labelY = product.position.y + 34;
+      const nameText = this.add.text(product.position.x, labelY, product.name, {
         fontSize: '9px',
         fontFamily: 'sans-serif',
         color: '#636e72',
         align: 'center'
       }).setOrigin(0.5);
+
+      const bw = Math.max((nameText.width || 50) + pad * 2, 50);
+      const bh = Math.max((nameText.height || 14) + pad * 2, 22);
+      const bg = this.add.graphics();
+      bg.fillStyle(0xffffff, 0.92);
+      bg.fillRoundedRect(
+        product.position.x - bw / 2,
+        labelY - bh / 2,
+        bw,
+        bh,
+        6
+      );
+      bg.setDepth(0);
+      nameText.setDepth(1);
 
       this.products.push(sprite);
     });
@@ -276,9 +292,19 @@ export class StoreScene extends Phaser.Scene {
     const hs = this.hotspotsData[productData.id] || { front: [], ingredients: [], nutrition: [] };
     this.allHotspotRefs = [];
 
+    let didBuild = false;
+    const doBuild = () => {
+      if (didBuild) return;
+      didBuild = true;
+      this.modalImage.onload = null;
+      requestAnimationFrame(() => {
+        this.buildHotspots(hs.front);
+        this.buildExtraImages(productData.images, hs);
+      });
+    };
+    this.modalImage.onload = doBuild;
     this.modalImage.src = productData.images.front;
-    this.buildHotspots(hs.front);
-    this.buildExtraImages(productData.images, hs);
+    if (this.modalImage.complete) doBuild();
     this.imagesRow.style.height = '';
     this.splitter.classList.add('hidden');
     this.phaseSelect.classList.remove('hidden');
@@ -294,29 +320,7 @@ export class StoreScene extends Phaser.Scene {
   }
 
   updateLeaderCircleAspectRatios() {
-    const baseR = 1.8;
-    this.modalEl.querySelectorAll('.leader-overlay').forEach((svg) => {
-      const rect = svg.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
-      if (w <= 0 || h <= 0) return;
-      const minSvg = Math.min(w, h);
-      const wrapper = svg.closest('.extra-img-wrapper');
-      let effectiveMin = minSvg;
-      if (wrapper) {
-        const wr = wrapper.getBoundingClientRect();
-        const minWrap = Math.min(wr.width, wr.height);
-        if (minWrap > 0) {
-          effectiveMin = Math.min(minWrap, minSvg * 2);
-        }
-      }
-      const rx = (baseR * effectiveMin) / w;
-      const ry = (baseR * effectiveMin) / h;
-      svg.querySelectorAll('.leader-number ellipse').forEach((el) => {
-        el.setAttribute('rx', String(rx));
-        el.setAttribute('ry', String(ry));
-      });
-    });
+    // Circles use aspect-ratio viewBox + meet, so they stay round; no runtime adjustment needed
   }
 
   buildExtraImages(images, hs) {
@@ -338,26 +342,48 @@ export class StoreScene extends Phaser.Scene {
     } else {
       this.imagesRow.classList.remove('images-row--equal-panels');
     }
-    pairs.forEach(({ src, hotspots }) => {
-      if (!src) return;
+    const frontCount = this.allHotspotRefs.length;
+    let nextOffset = frontCount;
+    const items = pairs.map(({ src, hotspots }) => {
       const wrapper = document.createElement('div');
       wrapper.className = 'extra-img-wrapper';
-
       const inner = document.createElement('div');
       inner.className = 'extra-zoom-inner';
       const img = document.createElement('img');
-      img.src = src;
       img.alt = 'Product info';
       inner.appendChild(img);
       wrapper.appendChild(inner);
-
-      if (hotspots.length) {
-        this.buildExtraHotspots(wrapper, inner, hotspots);
-      }
-
-      this.setupExtraZoom(wrapper, inner);
       container.appendChild(wrapper);
+      return { wrapper, inner, img, src, hotspots };
     });
+
+    const loadNext = (idx) => {
+      if (idx >= items.length) return;
+      const { wrapper, inner, img, src, hotspots } = items[idx];
+      if (!src) {
+        loadNext(idx + 1);
+        return;
+      }
+      const offset = nextOffset;
+      if (hotspots.length) {
+        const build = () => {
+          requestAnimationFrame(() => {
+            this.buildExtraHotspots(wrapper, inner, hotspots, offset);
+            nextOffset += hotspots.length;
+            this.setupExtraZoom(wrapper, inner);
+            loadNext(idx + 1);
+          });
+        };
+        img.onload = build;
+        img.src = src;
+        if (img.complete) build();
+      } else {
+        img.src = src;
+        this.setupExtraZoom(wrapper, inner);
+        loadNext(idx + 1);
+      }
+    };
+    loadNext(0);
   }
 
   setupExtraZoom(wrapper, inner) {
@@ -415,21 +441,74 @@ export class StoreScene extends Phaser.Scene {
     window.addEventListener('mouseup', onUp);
   }
 
-  buildExtraHotspots(wrapper, inner, hotspots) {
+  buildExtraHotspots(wrapper, inner, hotspots, globalOffset = this.allHotspotRefs.length) {
+    const oldSvg = wrapper.querySelector('.leader-overlay') || inner.querySelector('.leader-overlay');
+    if (oldSvg) oldSvg.remove();
+    const oldRegion = inner.querySelector('.extra-image-region');
+    if (oldRegion) {
+      const imgInside = oldRegion.querySelector('img');
+      if (imgInside) inner.appendChild(imgInside);
+      oldRegion.remove();
+    }
+
+    const img = inner.querySelector('img');
+    const imageRegion = document.createElement('div');
+    imageRegion.className = 'extra-image-region';
+    if (img) {
+      inner.removeChild(img);
+      imageRegion.appendChild(img);
+      const nw = img.naturalWidth || img.width;
+      const nh = img.naturalHeight || img.height;
+      if (nw > 0 && nh > 0) {
+        imageRegion.style.aspectRatio = `${nw} / ${nh}`;
+      }
+    }
+    inner.appendChild(imageRegion);
+
+    const innerRect = inner.getBoundingClientRect();
+    const imgRect = imageRegion.getBoundingClientRect();
+    const coordMax = 100;
+    const innerX0 = innerRect.width ? ((imgRect.left - innerRect.left) / innerRect.width) * coordMax : 0;
+    const innerY0 = innerRect.height ? ((imgRect.top - innerRect.top) / innerRect.height) * coordMax : 0;
+    const innerW = innerRect.width ? (imgRect.width / innerRect.width) * coordMax : coordMax;
+    const innerH = innerRect.height ? (imgRect.height / innerRect.height) * coordMax : coordMax;
+
+    const w = inner.offsetWidth || 1;
+    const h = inner.offsetHeight || 1;
+    const aspect = w / h;
+    const vbW = aspect >= 1 ? 100 : 100 * aspect;
+    const vbH = aspect >= 1 ? 100 / aspect : 100;
+    const toSvg = (x, y) => ({ x: (x / coordMax) * vbW, y: (y / coordMax) * vbH });
+
+    const imgToInner = (imgX, imgY) => ({
+      x: innerX0 + (innerW * imgX) / 100,
+      y: innerY0 + (innerH * imgY) / 100
+    });
+
     const NS = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(NS, 'svg');
     svg.classList.add('leader-overlay');
-    svg.setAttribute('viewBox', '0 0 100 100');
-    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.setAttribute('viewBox', `0 0 ${vbW} ${vbH}`);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
-    const r = 1.8;
+    const targetRenderedPx = 8;
+    const targetFontPx = 8;
+    const scale = Math.min(w / vbW, h / vbH) || 1;
+    const r = Math.max(0.9, targetRenderedPx / scale);
+    const fontSize = targetFontPx / scale;
     const lineLen = 4;
+    const maxLineLen = 6;
     const placed = [];
-    const globalOffset = this.allHotspotRefs.length;
-    const leaderData = [];
+    const margin = r + 1;
+    const minExcess = margin + lineLen;
 
     hotspots.forEach((h, i) => {
       const globalIdx = globalOffset + i;
+      const boxL = innerX0 + (innerW * h.left) / 100;
+      const boxT = innerY0 + (innerH * h.top) / 100;
+      const boxR = innerX0 + (innerW * (h.left + h.width)) / 100;
+      const boxB = innerY0 + (innerH * (h.top + h.height)) / 100;
+
       const div = document.createElement('div');
       div.className = 'hotspot';
       div.dataset.id = h.id;
@@ -462,30 +541,81 @@ export class StoreScene extends Phaser.Scene {
         if (nm) nm.classList.remove('hovered');
       });
 
-      inner.appendChild(div);
+      imageRegion.appendChild(div);
       this.allHotspotRefs.push({ id: h.id, el: div, container: wrapper });
 
-      const cx = h.left + h.width / 2;
-      const cy = h.top + h.height / 2;
+      const cx = (boxL + boxR) / 2;
+      const cy = (boxT + boxB) / 2;
 
-      const candidates = [
-        { nx: h.left - lineLen - r, ny: cy, lx: h.left, ly: cy },
-        { nx: h.left + h.width + lineLen + r, ny: cy, lx: h.left + h.width, ly: cy },
-        { nx: cx, ny: h.top - lineLen - r, lx: cx, ly: h.top },
-        { nx: cx, ny: h.top + h.height + lineLen + r, lx: cx, ly: h.top + h.height },
+      const rawCandidates = [
+        { nx: h.left - lineLen - r, ny: h.top + h.height / 2, lx: h.left, ly: h.top + h.height / 2 },
+        { nx: h.left + h.width + lineLen + r, ny: h.top + h.height / 2, lx: h.left + h.width, ly: h.top + h.height / 2 },
+        { nx: h.left + h.width / 2, ny: h.top - lineLen - r, lx: h.left + h.width / 2, ly: h.top },
+        { nx: h.left + h.width / 2, ny: h.top + h.height + lineLen + r, lx: h.left + h.width / 2, ly: h.top + h.height },
       ];
+      const boxCenterX = h.left + h.width / 2;
+      const preferRight = boxCenterX > 50;
+      const order = preferRight ? [1, 0, 3, 2] : [0, 1, 2, 3];
+      let candidates = order.map(idx => {
+        const c = rawCandidates[idx];
+        const n = imgToInner(c.nx, c.ny);
+        const l = imgToInner(c.lx, c.ly);
+        return { nx: n.x, ny: n.y, lx: l.x, ly: l.y };
+      });
+      if (innerX0 >= minExcess) {
+        candidates.push({ nx: innerX0 / 2, ny: cy, lx: boxL, ly: cy });
+      }
+      if (coordMax - (innerX0 + innerW) >= minExcess) {
+        candidates.push({ nx: innerX0 + innerW + (coordMax - innerX0 - innerW) / 2, ny: cy, lx: boxR, ly: cy });
+      }
+      if (innerY0 >= minExcess) {
+        candidates.push({ nx: cx, ny: innerY0 / 2, lx: cx, ly: boxT });
+      }
+      if (coordMax - (innerY0 + innerH) >= minExcess) {
+        candidates.push({ nx: cx, ny: innerY0 + innerH + (coordMax - innerY0 - innerH) / 2, lx: cx, ly: boxB });
+      }
+
+      const buffer = r + 0.5;
+      const insideCurrent = (nx, ny) => nx >= boxL - buffer && nx <= boxR + buffer && ny >= boxT - buffer && ny <= boxB + buffer;
+      const insideAnyBox = (nx, ny) => {
+        for (const other of hotspots) {
+          const oL = innerX0 + (innerW * other.left) / 100 - buffer;
+          const oT = innerY0 + (innerH * other.top) / 100 - buffer;
+          const oR = innerX0 + (innerW * (other.left + other.width)) / 100 + buffer;
+          const oB = innerY0 + (innerH * (other.top + other.height)) / 100 + buffer;
+          if (nx >= oL && nx <= oR && ny >= oT && ny <= oB) return true;
+        }
+        return false;
+      };
 
       let best = null;
       let bestScore = -Infinity;
-
       for (const c of candidates) {
-        if (c.nx < 1 || c.nx > 99 || c.ny < 1 || c.ny > 99) continue;
+        if (c.nx < 0 || c.nx > coordMax || c.ny < 0 || c.ny > coordMax) continue;
+        if (insideCurrent(c.nx, c.ny)) continue;
+        if (insideAnyBox(c.nx, c.ny)) continue;
         let score = 0;
-        for (const other of hotspots) {
-          if (c.nx > other.left - r && c.nx < other.left + other.width + r &&
-              c.ny > other.top - r && c.ny < other.top + other.height + r) {
-            score -= 10;
+        const inLetterbox = c.nx < innerX0 || c.nx > innerX0 + innerW || c.ny < innerY0 || c.ny > innerY0 + innerH;
+        if (inLetterbox) {
+          score += 25;
+          const boxOnLeft = cx < innerX0 + innerW / 2;
+          const boxOnRight = cx >= innerX0 + innerW / 2;
+          const boxOnTop = cy < innerY0 + innerH / 2;
+          const boxOnBottom = cy >= innerY0 + innerH / 2;
+          const candOnLeft = c.nx < innerX0;
+          const candOnRight = c.nx > innerX0 + innerW;
+          const candOnTop = c.ny < innerY0;
+          const candOnBottom = c.ny > innerY0 + innerH;
+          if ((boxOnLeft && candOnLeft) || (boxOnRight && candOnRight) || (boxOnTop && candOnTop) || (boxOnBottom && candOnBottom)) {
+            score += 30;
           }
+        }
+        for (const other of hotspots) {
+          const oL = innerX0 + (innerW * other.left) / 100;
+          const oT = innerY0 + (innerH * other.top) / 100;
+          const oW = (innerW * other.width) / 100;
+          const oH = (innerH * other.height) / 100;
+          if (c.nx > oL - r && c.nx < oL + oW + r && c.ny > oT - r && c.ny < oT + oH + r) score -= 10;
         }
         for (const p of placed) {
           const dist = Math.sqrt((c.nx - p.x) ** 2 + (c.ny - p.y) ** 2);
@@ -497,24 +627,67 @@ export class StoreScene extends Phaser.Scene {
         }
       }
 
+      const validCandidates = candidates.filter(c =>
+        c.nx >= 0 && c.nx <= coordMax && c.ny >= 0 && c.ny <= coordMax &&
+        !insideCurrent(c.nx, c.ny) && !insideAnyBox(c.nx, c.ny)
+      );
+      if (!best && validCandidates.length) best = validCandidates[0];
       if (!best) best = candidates[0];
-      placed.push({ x: best.nx, y: best.ny });
+      let nx = Math.max(0, Math.min(coordMax, best.nx));
+      let ny = Math.max(0, Math.min(coordMax, best.ny));
 
-      const dx = best.nx - best.lx;
-      const dy = best.ny - best.ly;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const endX = dist > 0 ? best.nx - (dx / dist) * r : best.nx;
-      const endY = dist > 0 ? best.ny - (dy / dist) * r : best.ny;
+      const nudge = 0.5;
+      const getNudgeDir = (px, py) => {
+        let cx = (boxL + boxR) / 2, cy = (boxT + boxB) / 2;
+        if (!insideCurrent(px, py) && insideAnyBox(px, py)) {
+          for (const other of hotspots) {
+            const oL = innerX0 + (innerW * other.left) / 100 - buffer;
+            const oT = innerY0 + (innerH * other.top) / 100 - buffer;
+            const oR = innerX0 + (innerW * (other.left + other.width)) / 100 + buffer;
+            const oB = innerY0 + (innerH * (other.top + other.height)) / 100 + buffer;
+            if (px >= oL && px <= oR && py >= oT && py <= oB) {
+              cx = innerX0 + (innerW * (other.left + other.width / 2)) / 100;
+              cy = innerY0 + (innerH * (other.top + other.height / 2)) / 100;
+              break;
+            }
+          }
+        }
+        return { dx: px - cx, dy: py - cy };
+      };
+      for (let step = 0; step < 20 && (insideCurrent(nx, ny) || insideAnyBox(nx, ny)); step++) {
+        const { dx, dy } = getNudgeDir(nx, ny);
+        const len = Math.sqrt(dx * dx + dy * dy) || 1;
+        nx = Math.max(0, Math.min(coordMax, nx + (dx / len) * nudge));
+        ny = Math.max(0, Math.min(coordMax, ny + (dy / len) * nudge));
+      }
+      let dx = nx - best.lx;
+      let dy = ny - best.ly;
+      let dist = Math.sqrt(dx * dx + dy * dy);
+      const inLetterbox = nx < innerX0 || nx > innerX0 + innerW || ny < innerY0 || ny > innerY0 + innerH;
+      if (inLetterbox && dist > maxLineLen) {
+        const scale = (maxLineLen + r) / dist;
+        nx = best.lx + dx * scale;
+        ny = best.ly + dy * scale;
+        dx = nx - best.lx;
+        dy = ny - best.ly;
+        dist = maxLineLen + r;
+      }
+      placed.push({ x: nx, y: ny });
 
-      leaderData.push({ globalIdx, lx: best.lx, ly: best.ly, nx: best.nx, ny: best.ny, endX, endY });
+      const endX = dist > 0 ? nx - (dx / dist) * r : nx;
+      const endY = dist > 0 ? ny - (dy / dist) * r : ny;
+
+      const p1 = toSvg(best.lx, best.ly);
+      const p2 = toSvg(endX, endY);
+      const circ = toSvg(nx, ny);
 
       const line = document.createElementNS(NS, 'line');
       line.classList.add('leader-line');
       line.dataset.index = globalIdx;
-      line.setAttribute('x1', best.lx);
-      line.setAttribute('y1', best.ly);
-      line.setAttribute('x2', endX);
-      line.setAttribute('y2', endY);
+      line.setAttribute('x1', p1.x);
+      line.setAttribute('y1', p1.y);
+      line.setAttribute('x2', p2.x);
+      line.setAttribute('y2', p2.y);
       line.setAttribute('vector-effect', 'non-scaling-stroke');
       svg.appendChild(line);
 
@@ -523,19 +696,20 @@ export class StoreScene extends Phaser.Scene {
       g.dataset.index = globalIdx;
       g.dataset.id = h.id;
 
-      const ellipse = document.createElementNS(NS, 'ellipse');
-      ellipse.setAttribute('cx', best.nx);
-      ellipse.setAttribute('cy', best.ny);
-      ellipse.setAttribute('rx', String(r));
-      ellipse.setAttribute('ry', String(r));
-      ellipse.setAttribute('vector-effect', 'non-scaling-stroke');
-      g.appendChild(ellipse);
+      const circle = document.createElementNS(NS, 'circle');
+      circle.setAttribute('cx', circ.x);
+      circle.setAttribute('cy', circ.y);
+      circle.setAttribute('r', String(r));
+      circle.setAttribute('vector-effect', 'non-scaling-stroke');
+      g.appendChild(circle);
 
       const text = document.createElementNS(NS, 'text');
-      text.setAttribute('x', best.nx);
-      text.setAttribute('y', best.ny);
+      text.setAttribute('x', circ.x);
+      text.setAttribute('y', circ.y);
+      text.setAttribute('font-size', String(fontSize));
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('dominant-baseline', 'central');
       text.textContent = globalIdx + 1;
-      text.setAttribute('vector-effect', 'non-scaling-stroke');
       g.appendChild(text);
 
       g.addEventListener('click', (e) => {
@@ -561,45 +735,60 @@ export class StoreScene extends Phaser.Scene {
     zoomInner.style.transformOrigin = 'center center';
     this.frontImgWrapper.classList.remove('zoomed');
 
+    const w = zoomInner.offsetWidth || 1;
+    const h = zoomInner.offsetHeight || 1;
+    const aspect = w / h;
+    const vbW = aspect >= 1 ? 100 : 100 * aspect;
+    const vbH = aspect >= 1 ? 100 / aspect : 100;
+    const scaleX = vbW / 100;
+    const scaleY = vbH / 100;
+
     const NS = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(NS, 'svg');
     svg.classList.add('leader-overlay');
-    svg.setAttribute('viewBox', '0 0 100 100');
-    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.setAttribute('viewBox', `0 0 ${vbW} ${vbH}`);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
-    const r = 1.8;
+    const targetRenderedPx = 8;
+    const targetFontPx = 8;
+    const scale = Math.min(w / vbW, h / vbH) || 1;
+    const r = Math.max(0.9, targetRenderedPx / scale);
+    const fontSize = targetFontPx / scale;
     const lineLen = 4;
     const placed = [];
     const mainLeaderData = [];
+    const globalOffset = this.allHotspotRefs.length;
 
     hotspots.forEach((hs, index) => {
+      const globalIdx = globalOffset + index;
       const div = document.createElement('div');
       div.className = 'hotspot';
       div.dataset.id = hs.id;
+      div.dataset.globalIdx = globalIdx;
       div.style.left = hs.left + '%';
       div.style.top = hs.top + '%';
       div.style.width = hs.width + '%';
       div.style.height = hs.height + '%';
-      div.style.zIndex = String(index + 1);
+      div.style.zIndex = String(globalIdx + 1);
 
       div.addEventListener('click', (e) => {
         if (this.inReveal) return;
         e.stopPropagation();
-        this.handleHotspotClick(hs.id, index, e);
+        this.handleHotspotClick(hs.id, globalIdx, e);
       });
 
       div.addEventListener('mouseenter', () => {
         if (this.inReveal) return;
-        const ln = svg.querySelector(`.leader-line[data-index="${index}"]`);
-        const nm = svg.querySelector(`.leader-number[data-index="${index}"]`);
+        const ln = svg.querySelector(`.leader-line[data-index="${globalIdx}"]`);
+        const nm = svg.querySelector(`.leader-number[data-index="${globalIdx}"]`);
         if (ln) ln.classList.add('hovered');
         if (nm) nm.classList.add('hovered');
       });
 
       div.addEventListener('mouseleave', () => {
         if (this.inReveal) return;
-        const ln = svg.querySelector(`.leader-line[data-index="${index}"]`);
-        const nm = svg.querySelector(`.leader-number[data-index="${index}"]`);
+        const ln = svg.querySelector(`.leader-line[data-index="${globalIdx}"]`);
+        const nm = svg.querySelector(`.leader-number[data-index="${globalIdx}"]`);
         if (ln) ln.classList.remove('hovered');
         if (nm) nm.classList.remove('hovered');
       });
@@ -610,56 +799,95 @@ export class StoreScene extends Phaser.Scene {
       const cx = hs.left + hs.width / 2;
       const cy = hs.top + hs.height / 2;
 
-      // Try placing the number at each side of the box, pick best
-      const candidates = [
-        { nx: hs.left - lineLen - r, ny: cy, lx: hs.left, ly: cy },                          // left
-        { nx: hs.left + hs.width + lineLen + r, ny: cy, lx: hs.left + hs.width, ly: cy },    // right
-        { nx: cx, ny: hs.top - lineLen - r, lx: cx, ly: hs.top },                             // top
-        { nx: cx, ny: hs.top + hs.height + lineLen + r, lx: cx, ly: hs.top + hs.height },    // bottom
+      const rawCandidates = [
+        { nx: hs.left - lineLen - r, ny: cy, lx: hs.left, ly: cy },
+        { nx: hs.left + hs.width + lineLen + r, ny: cy, lx: hs.left + hs.width, ly: cy },
+        { nx: cx, ny: hs.top - lineLen - r, lx: cx, ly: hs.top },
+        { nx: cx, ny: hs.top + hs.height + lineLen + r, lx: cx, ly: hs.top + hs.height },
       ];
+      const order = globalIdx % 2 === 0 ? [0, 1, 2, 3] : [1, 0, 3, 2];
+      const candidates = order.map(idx => {
+        const c = rawCandidates[idx];
+        return { nx: c.nx * scaleX, ny: c.ny * scaleY, lx: c.lx * scaleX, ly: c.ly * scaleY };
+      });
 
-      // Pick candidate with least overlap with already placed numbers and other boxes
+      const boxL = hs.left * scaleX, boxT = hs.top * scaleY, boxR = boxL + hs.width * scaleX, boxB = boxT + hs.height * scaleY;
+      const buffer = r + 0.5;
+      const insideCurrent = (nx, ny) => nx >= boxL - buffer && nx <= boxR + buffer && ny >= boxT - buffer && ny <= boxB + buffer;
+      const insideAnyBox = (nx, ny) => {
+        for (const other of hotspots) {
+          const oL = other.left * scaleX - buffer, oT = other.top * scaleY - buffer, oR = other.left * scaleX + other.width * scaleX + buffer, oB = other.top * scaleY + other.height * scaleY + buffer;
+          if (nx >= oL && nx <= oR && ny >= oT && ny <= oB) return true;
+        }
+        return false;
+      };
+
       let best = null;
       let bestScore = -Infinity;
+      const margin = r + 1;
 
       for (const c of candidates) {
-        if (c.nx < 1 || c.nx > 99 || c.ny < 1 || c.ny > 99) continue;
-
+        if (c.nx < margin || c.nx > vbW - margin || c.ny < margin || c.ny > vbH - margin) continue;
+        if (insideCurrent(c.nx, c.ny)) continue;
+        if (insideAnyBox(c.nx, c.ny)) continue;
         let score = 0;
-        // Penalize overlap with other boxes
         for (const other of hotspots) {
-          if (c.nx > other.left - r && c.nx < other.left + other.width + r &&
-              c.ny > other.top - r && c.ny < other.top + other.height + r) {
-            score -= 10;
-          }
+          const oL = other.left * scaleX, oT = other.top * scaleY, oW = other.width * scaleX, oH = other.height * scaleY;
+          if (c.nx > oL - r && c.nx < oL + oW + r && c.ny > oT - r && c.ny < oT + oH + r) score -= 10;
         }
-        // Penalize closeness to already placed numbers
         for (const p of placed) {
           const dist = Math.sqrt((c.nx - p.x) ** 2 + (c.ny - p.y) ** 2);
           if (dist < 4) score -= (4 - dist) * 3;
         }
-
         if (best === null || score > bestScore) {
           best = c;
           bestScore = score;
         }
       }
 
+      const validCandidates = candidates.filter(c =>
+        c.nx >= margin && c.nx <= vbW - margin && c.ny >= margin && c.ny <= vbH - margin &&
+        !insideCurrent(c.nx, c.ny) && !insideAnyBox(c.nx, c.ny)
+      );
+      if (!best && validCandidates.length) best = validCandidates[0];
       if (!best) best = candidates[0];
-      placed.push({ x: best.nx, y: best.ny });
+      let nx = Math.max(margin, Math.min(vbW - margin, best.nx));
+      let ny = Math.max(margin, Math.min(vbH - margin, best.ny));
 
-      // Shorten line so it stops at the circle edge, not the center
-      const dx = best.nx - best.lx;
-      const dy = best.ny - best.ly;
+      const nudge = 0.5;
+      const getNudgeDir = (px, py) => {
+        let cx = (boxL + boxR) / 2, cy = (boxT + boxB) / 2;
+        if (!insideCurrent(px, py) && insideAnyBox(px, py)) {
+          for (const other of hotspots) {
+            const oL = other.left * scaleX - buffer, oT = other.top * scaleY - buffer, oR = other.left * scaleX + other.width * scaleX + buffer, oB = other.top * scaleY + other.height * scaleY + buffer;
+            if (px >= oL && px <= oR && py >= oT && py <= oB) {
+              cx = (other.left + other.width / 2) * scaleX;
+              cy = (other.top + other.height / 2) * scaleY;
+              break;
+            }
+          }
+        }
+        return { dx: px - cx, dy: py - cy };
+      };
+      for (let step = 0; step < 20 && (insideCurrent(nx, ny) || insideAnyBox(nx, ny)); step++) {
+        const { dx: dnx, dy: dny } = getNudgeDir(nx, ny);
+        const len = Math.sqrt(dnx * dnx + dny * dny) || 1;
+        nx = Math.max(margin, Math.min(vbW - margin, nx + (dnx / len) * nudge));
+        ny = Math.max(margin, Math.min(vbH - margin, ny + (dny / len) * nudge));
+      }
+      placed.push({ x: nx, y: ny });
+
+      const dx = nx - best.lx;
+      const dy = ny - best.ly;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const endX = dist > 0 ? best.nx - (dx / dist) * r : best.nx;
-      const endY = dist > 0 ? best.ny - (dy / dist) * r : best.ny;
+      const endX = dist > 0 ? nx - (dx / dist) * r : nx;
+      const endY = dist > 0 ? ny - (dy / dist) * r : ny;
 
-      mainLeaderData.push({ globalIdx: index, lx: best.lx, ly: best.ly, nx: best.nx, ny: best.ny, endX, endY });
+      mainLeaderData.push({ globalIdx, lx: best.lx, ly: best.ly, nx, ny, endX, endY });
 
       const line = document.createElementNS(NS, 'line');
       line.classList.add('leader-line');
-      line.dataset.index = index;
+      line.dataset.index = globalIdx;
       line.setAttribute('x1', best.lx);
       line.setAttribute('y1', best.ly);
       line.setAttribute('x2', endX);
@@ -669,28 +897,29 @@ export class StoreScene extends Phaser.Scene {
 
       const g = document.createElementNS(NS, 'g');
       g.classList.add('leader-number');
-      g.dataset.index = index;
+      g.dataset.index = globalIdx;
       g.dataset.id = hs.id;
 
-      const ellipse = document.createElementNS(NS, 'ellipse');
-      ellipse.setAttribute('cx', best.nx);
-      ellipse.setAttribute('cy', best.ny);
-      ellipse.setAttribute('rx', String(r));
-      ellipse.setAttribute('ry', String(r));
-      ellipse.setAttribute('vector-effect', 'non-scaling-stroke');
-      g.appendChild(ellipse);
+      const circle = document.createElementNS(NS, 'circle');
+      circle.setAttribute('cx', nx);
+      circle.setAttribute('cy', ny);
+      circle.setAttribute('r', String(r));
+      circle.setAttribute('vector-effect', 'non-scaling-stroke');
+      g.appendChild(circle);
 
       const text = document.createElementNS(NS, 'text');
-      text.setAttribute('x', best.nx);
-      text.setAttribute('y', best.ny);
-      text.textContent = index + 1;
-      text.setAttribute('vector-effect', 'non-scaling-stroke');
+      text.setAttribute('x', nx);
+      text.setAttribute('y', ny);
+      text.setAttribute('font-size', String(fontSize));
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('dominant-baseline', 'central');
+      text.textContent = globalIdx + 1;
       g.appendChild(text);
 
       g.addEventListener('click', (e) => {
         if (this.inReveal) return;
         e.stopPropagation();
-        this.handleHotspotClick(hs.id, index, e);
+        this.handleHotspotClick(hs.id, globalIdx, e);
       });
 
       svg.appendChild(g);

@@ -144,6 +144,13 @@
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       pointer-events: none; z-index: 2;
     }
+    .extra-img-wrapper .leader-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 2;
+    }
+    .extra-img-wrapper .leader-overlay .leader-number {
+      pointer-events: auto; cursor: pointer;
+    }
     .extra-zoom-inner .leader-line { stroke: rgba(80, 80, 80, 0.7); }
     .extra-zoom-inner .leader-line.hovered { stroke: rgba(180, 150, 0, 0.9); }
     .extra-zoom-inner .leader-number circle { fill: transparent; stroke: rgba(80, 80, 80, 0.7); }
@@ -483,29 +490,40 @@
         zoomInner.style.transformOrigin = 'center center';
         imageContainer.classList.remove('zoomed');
 
+        const w = zoomInner.offsetWidth || 1;
+        const h = zoomInner.offsetHeight || 1;
+        const aspect = w / h;
+        const vbW = aspect >= 1 ? 100 : 100 * aspect;
+        const vbH = aspect >= 1 ? 100 / aspect : 100;
+        const scaleX = vbW / 100;
+        const scaleY = vbH / 100;
+
         const NS = 'http://www.w3.org/2000/svg';
         const svg = document.createElementNS(NS, 'svg');
         svg.classList.add('leader-overlay');
-        svg.setAttribute('viewBox', '0 0 100 100');
-        svg.setAttribute('preserveAspectRatio', 'none');
+        svg.setAttribute('viewBox', `0 0 ${vbW} ${vbH}`);
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
         const r = 1.8, lineLen = 4, placed = [];
+        const globalOffset = state.allHotspotRefs.length;
 
         hotspots.forEach((hs, index) => {
+          const globalIdx = globalOffset + index;
           const div = document.createElement('div');
           div.className = 'hotspot';
           div.dataset.id = hs.id;
+          div.dataset.globalIdx = globalIdx;
           div.style.cssText = `left:${hs.left}%;top:${hs.top}%;width:${hs.width}%;height:${hs.height}%`;
-          div.addEventListener('click', (e) => { if (!state.inReveal) { e.stopPropagation(); handleHotspotClick(hs.id, index, e); } });
+          div.addEventListener('click', (e) => { if (!state.inReveal) { e.stopPropagation(); handleHotspotClick(hs.id, globalIdx, e); } });
           div.addEventListener('mouseenter', () => {
             if (state.inReveal) return;
-            const ln = svg.querySelector(`.leader-line[data-index="${index}"]`);
-            const nm = svg.querySelector(`.leader-number[data-index="${index}"]`);
+            const ln = svg.querySelector(`.leader-line[data-index="${globalIdx}"]`);
+            const nm = svg.querySelector(`.leader-number[data-index="${globalIdx}"]`);
             if (ln) ln.classList.add('hovered');
             if (nm) nm.classList.add('hovered');
           });
           div.addEventListener('mouseleave', () => {
-            const ln = svg.querySelector(`.leader-line[data-index="${index}"]`);
-            const nm = svg.querySelector(`.leader-number[data-index="${index}"]`);
+            const ln = svg.querySelector(`.leader-line[data-index="${globalIdx}"]`);
+            const nm = svg.querySelector(`.leader-number[data-index="${globalIdx}"]`);
             if (ln) ln.classList.remove('hovered');
             if (nm) nm.classList.remove('hovered');
           });
@@ -513,18 +531,37 @@
           state.allHotspotRefs.push({ id: hs.id, el: div, container: zoomInner });
 
           const cx = hs.left + hs.width / 2, cy = hs.top + hs.height / 2;
-          const candidates = [
+          const rawCandidates = [
             { nx: hs.left - lineLen - r, ny: cy, lx: hs.left, ly: cy },
             { nx: hs.left + hs.width + lineLen + r, ny: cy, lx: hs.left + hs.width, ly: cy },
             { nx: cx, ny: hs.top - lineLen - r, lx: cx, ly: hs.top },
             { nx: cx, ny: hs.top + hs.height + lineLen + r, lx: cx, ly: hs.top + hs.height }
           ];
+          const order = globalIdx % 2 === 0 ? [0, 1, 2, 3] : [1, 0, 3, 2];
+          const candidates = order.map(idx => {
+            const c = rawCandidates[idx];
+            return { nx: c.nx * scaleX, ny: c.ny * scaleY, lx: c.lx * scaleX, ly: c.ly * scaleY };
+          });
+          const boxL = hs.left * scaleX, boxT = hs.top * scaleY, boxR = boxL + hs.width * scaleX, boxB = boxT + hs.height * scaleY;
+          const buffer = r + 0.5;
+          const insideCurrent = (nx, ny) => nx >= boxL - buffer && nx <= boxR + buffer && ny >= boxT - buffer && ny <= boxB + buffer;
+          const insideAnyBox = (nx, ny) => {
+            for (const other of hotspots) {
+              const oL = other.left * scaleX - buffer, oT = other.top * scaleY - buffer, oR = other.left * scaleX + other.width * scaleX + buffer, oB = other.top * scaleY + other.height * scaleY + buffer;
+              if (nx >= oL && nx <= oR && ny >= oT && ny <= oB) return true;
+            }
+            return false;
+          };
           let best = null, bestScore = -Infinity;
+          const marginVal = r + 1;
           for (const c of candidates) {
-            if (c.nx < 1 || c.nx > 99 || c.ny < 1 || c.ny > 99) continue;
+            if (c.nx < marginVal || c.nx > vbW - marginVal || c.ny < marginVal || c.ny > vbH - marginVal) continue;
+            if (insideCurrent(c.nx, c.ny)) continue;
+            if (insideAnyBox(c.nx, c.ny)) continue;
             let score = 0;
             for (const other of hotspots) {
-              if (c.nx > other.left - r && c.nx < other.left + other.width + r && c.ny > other.top - r && c.ny < other.top + other.height + r) score -= 10;
+              const oL = other.left * scaleX, oT = other.top * scaleY, oW = other.width * scaleX, oH = other.height * scaleY;
+              if (c.nx > oL - r && c.nx < oL + oW + r && c.ny > oT - r && c.ny < oT + oH + r) score -= 10;
             }
             for (const p of placed) {
               const dist = Math.sqrt((c.nx - p.x) ** 2 + (c.ny - p.y) ** 2);
@@ -532,16 +569,44 @@
             }
             if (best === null || score > bestScore) { best = c; bestScore = score; }
           }
+          const validCandidates = candidates.filter(c =>
+            c.nx >= marginVal && c.nx <= vbW - marginVal && c.ny >= marginVal && c.ny <= vbH - marginVal &&
+            !insideCurrent(c.nx, c.ny) && !insideAnyBox(c.nx, c.ny)
+          );
+          if (!best && validCandidates.length) best = validCandidates[0];
           if (!best) best = candidates[0];
-          placed.push({ x: best.nx, y: best.ny });
-          const dx = best.nx - best.lx, dy = best.ny - best.ly;
+          let nx = Math.max(marginVal, Math.min(vbW - marginVal, best.nx));
+          let ny = Math.max(marginVal, Math.min(vbH - marginVal, best.ny));
+          const nudge = 0.5;
+          const getNudgeDir = (px, py) => {
+            let cx = (boxL + boxR) / 2, cy = (boxT + boxB) / 2;
+            if (!insideCurrent(px, py) && insideAnyBox(px, py)) {
+              for (const other of hotspots) {
+                const oL = other.left * scaleX - buffer, oT = other.top * scaleY - buffer, oR = other.left * scaleX + other.width * scaleX + buffer, oB = other.top * scaleY + other.height * scaleY + buffer;
+                if (px >= oL && px <= oR && py >= oT && py <= oB) {
+                  cx = (other.left + other.width / 2) * scaleX;
+                  cy = (other.top + other.height / 2) * scaleY;
+                  break;
+                }
+              }
+            }
+            return { dx: px - cx, dy: py - cy };
+          };
+          for (let step = 0; step < 20 && (insideCurrent(nx, ny) || insideAnyBox(nx, ny)); step++) {
+            const { dx: dnx, dy: dny } = getNudgeDir(nx, ny);
+            const len = Math.sqrt(dnx * dnx + dny * dny) || 1;
+            nx = Math.max(marginVal, Math.min(vbW - marginVal, nx + (dnx / len) * nudge));
+            ny = Math.max(marginVal, Math.min(vbH - marginVal, ny + (dny / len) * nudge));
+          }
+          placed.push({ x: nx, y: ny });
+          const dx = nx - best.lx, dy = ny - best.ly;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          const endX = dist > 0 ? best.nx - (dx / dist) * r : best.nx;
-          const endY = dist > 0 ? best.ny - (dy / dist) * r : best.ny;
+          const endX = dist > 0 ? nx - (dx / dist) * r : nx;
+          const endY = dist > 0 ? ny - (dy / dist) * r : ny;
 
           const line = document.createElementNS(NS, 'line');
           line.classList.add('leader-line');
-          line.dataset.index = index;
+          line.dataset.index = globalIdx;
           line.setAttribute('x1', best.lx);
           line.setAttribute('y1', best.ly);
           line.setAttribute('x2', endX);
@@ -551,34 +616,46 @@
 
           const g = document.createElementNS(NS, 'g');
           g.classList.add('leader-number');
-          g.dataset.index = index;
+          g.dataset.index = globalIdx;
           g.dataset.id = hs.id;
           const circle = document.createElementNS(NS, 'circle');
-          circle.setAttribute('cx', best.nx);
-          circle.setAttribute('cy', best.ny);
+          circle.setAttribute('cx', nx);
+          circle.setAttribute('cy', ny);
           circle.setAttribute('r', r);
           circle.setAttribute('vector-effect', 'non-scaling-stroke');
           g.appendChild(circle);
           const text = document.createElementNS(NS, 'text');
-          text.setAttribute('x', best.nx);
-          text.setAttribute('y', best.ny);
-          text.textContent = index + 1;
+          text.setAttribute('x', nx);
+          text.setAttribute('y', ny);
+          text.textContent = globalIdx + 1;
           text.setAttribute('vector-effect', 'non-scaling-stroke');
           g.appendChild(text);
-          g.addEventListener('click', (e) => { if (!state.inReveal) { e.stopPropagation(); handleHotspotClick(hs.id, index, e); } });
+          g.addEventListener('click', (e) => { if (!state.inReveal) { e.stopPropagation(); handleHotspotClick(hs.id, globalIdx, e); } });
           svg.appendChild(g);
         });
         zoomInner.appendChild(svg);
       }
 
-      function buildExtraHotspots(wrapper, hotspots) {
+      function buildExtraHotspots(wrapper, inner, hotspots) {
+        const oldSvg = inner.querySelector('.leader-overlay') || wrapper.querySelector('.leader-overlay');
+        if (oldSvg) oldSvg.remove();
+
+        const w = inner.offsetWidth || 1;
+        const h = inner.offsetHeight || 1;
+        const aspect = w / h;
+        const vbW = aspect >= 1 ? 100 : 100 * aspect;
+        const vbH = aspect >= 1 ? 100 / aspect : 100;
+        const scaleX = vbW / 100;
+        const scaleY = vbH / 100;
+
         const NS = 'http://www.w3.org/2000/svg';
         const svg = document.createElementNS(NS, 'svg');
         svg.classList.add('leader-overlay');
-        svg.setAttribute('viewBox', '0 0 100 100');
-        svg.setAttribute('preserveAspectRatio', 'none');
+        svg.setAttribute('viewBox', `0 0 ${vbW} ${vbH}`);
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
         const r = 1.8, lineLen = 4, placed = [];
         const globalOffset = state.allHotspotRefs.length;
+        const margin = r + 1;
 
         hotspots.forEach((h, i) => {
           const globalIdx = globalOffset + i;
@@ -601,22 +678,40 @@
             if (ln) ln.classList.remove('hovered');
             if (nm) nm.classList.remove('hovered');
           });
-          wrapper.appendChild(div);
+          inner.appendChild(div);
           state.allHotspotRefs.push({ id: h.id, el: div, svg, container: wrapper });
 
           const cx = h.left + h.width / 2, cy = h.top + h.height / 2;
-          const candidates = [
+          const rawCandidates = [
             { nx: h.left - lineLen - r, ny: cy, lx: h.left, ly: cy },
             { nx: h.left + h.width + lineLen + r, ny: cy, lx: h.left + h.width, ly: cy },
             { nx: cx, ny: h.top - lineLen - r, lx: cx, ly: h.top },
             { nx: cx, ny: h.top + h.height + lineLen + r, lx: cx, ly: h.top + h.height }
           ];
+          const order = globalIdx % 2 === 0 ? [0, 1, 2, 3] : [1, 0, 3, 2];
+          const candidates = order.map(idx => {
+            const c = rawCandidates[idx];
+            return { nx: c.nx * scaleX, ny: c.ny * scaleY, lx: c.lx * scaleX, ly: c.ly * scaleY };
+          });
+          const boxL = h.left * scaleX, boxT = h.top * scaleY, boxR = boxL + h.width * scaleX, boxB = boxT + h.height * scaleY;
+          const buffer = r + 0.5;
+          const insideCurrent = (nx, ny) => nx >= boxL - buffer && nx <= boxR + buffer && ny >= boxT - buffer && ny <= boxB + buffer;
+          const insideAnyBox = (nx, ny) => {
+            for (const other of hotspots) {
+              const oL = other.left * scaleX - buffer, oT = other.top * scaleY - buffer, oR = other.left * scaleX + other.width * scaleX + buffer, oB = other.top * scaleY + other.height * scaleY + buffer;
+              if (nx >= oL && nx <= oR && ny >= oT && ny <= oB) return true;
+            }
+            return false;
+          };
           let best = null, bestScore = -Infinity;
           for (const c of candidates) {
-            if (c.nx < 1 || c.nx > 99 || c.ny < 1 || c.ny > 99) continue;
+            if (c.nx < margin || c.nx > vbW - margin || c.ny < margin || c.ny > vbH - margin) continue;
+            if (insideCurrent(c.nx, c.ny)) continue;
+            if (insideAnyBox(c.nx, c.ny)) continue;
             let score = 0;
             for (const other of hotspots) {
-              if (c.nx > other.left - r && c.nx < other.left + other.width + r && c.ny > other.top - r && c.ny < other.top + other.height + r) score -= 10;
+              const oL = other.left * scaleX, oT = other.top * scaleY, oW = other.width * scaleX, oH = other.height * scaleY;
+              if (c.nx > oL - r && c.nx < oL + oW + r && c.ny > oT - r && c.ny < oT + oH + r) score -= 10;
             }
             for (const p of placed) {
               const dist = Math.sqrt((c.nx - p.x) ** 2 + (c.ny - p.y) ** 2);
@@ -624,12 +719,40 @@
             }
             if (best === null || score > bestScore) { best = c; bestScore = score; }
           }
+          const validCandidates = candidates.filter(c =>
+            c.nx >= margin && c.nx <= vbW - margin && c.ny >= margin && c.ny <= vbH - margin &&
+            !insideCurrent(c.nx, c.ny) && !insideAnyBox(c.nx, c.ny)
+          );
+          if (!best && validCandidates.length) best = validCandidates[0];
           if (!best) best = candidates[0];
-          placed.push({ x: best.nx, y: best.ny });
-          const dx = best.nx - best.lx, dy = best.ny - best.ly;
+          let nx = Math.max(margin, Math.min(vbW - margin, best.nx));
+          let ny = Math.max(margin, Math.min(vbH - margin, best.ny));
+          const nudge = 0.5;
+          const getNudgeDir = (px, py) => {
+            let cx = (boxL + boxR) / 2, cy = (boxT + boxB) / 2;
+            if (!insideCurrent(px, py) && insideAnyBox(px, py)) {
+              for (const other of hotspots) {
+                const oL = other.left * scaleX - buffer, oT = other.top * scaleY - buffer, oR = other.left * scaleX + other.width * scaleX + buffer, oB = other.top * scaleY + other.height * scaleY + buffer;
+                if (px >= oL && px <= oR && py >= oT && py <= oB) {
+                  cx = (other.left + other.width / 2) * scaleX;
+                  cy = (other.top + other.height / 2) * scaleY;
+                  break;
+                }
+              }
+            }
+            return { dx: px - cx, dy: py - cy };
+          };
+          for (let step = 0; step < 20 && (insideCurrent(nx, ny) || insideAnyBox(nx, ny)); step++) {
+            const { dx: dnx, dy: dny } = getNudgeDir(nx, ny);
+            const len = Math.sqrt(dnx * dnx + dny * dny) || 1;
+            nx = Math.max(margin, Math.min(vbW - margin, nx + (dnx / len) * nudge));
+            ny = Math.max(margin, Math.min(vbH - margin, ny + (dny / len) * nudge));
+          }
+          placed.push({ x: nx, y: ny });
+          const dx = nx - best.lx, dy = ny - best.ly;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          const endX = dist > 0 ? best.nx - (dx / dist) * r : best.nx;
-          const endY = dist > 0 ? best.ny - (dy / dist) * r : best.ny;
+          const endX = dist > 0 ? nx - (dx / dist) * r : nx;
+          const endY = dist > 0 ? ny - (dy / dist) * r : ny;
 
           const line = document.createElementNS(NS, 'line');
           line.classList.add('leader-line');
@@ -646,21 +769,21 @@
           g.dataset.index = globalIdx;
           g.dataset.id = h.id;
           const circle = document.createElementNS(NS, 'circle');
-          circle.setAttribute('cx', best.nx);
-          circle.setAttribute('cy', best.ny);
+          circle.setAttribute('cx', nx);
+          circle.setAttribute('cy', ny);
           circle.setAttribute('r', r);
           circle.setAttribute('vector-effect', 'non-scaling-stroke');
           g.appendChild(circle);
           const text = document.createElementNS(NS, 'text');
-          text.setAttribute('x', best.nx);
-          text.setAttribute('y', best.ny);
+          text.setAttribute('x', nx);
+          text.setAttribute('y', ny);
           text.textContent = globalIdx + 1;
           text.setAttribute('vector-effect', 'non-scaling-stroke');
           g.appendChild(text);
           g.addEventListener('click', (e) => { if (!state.inReveal) { e.stopPropagation(); handleHotspotClick(h.id, globalIdx, e); } });
           svg.appendChild(g);
         });
-        wrapper.appendChild(svg);
+        inner.appendChild(svg);
       }
 
       function buildExtraImages(images, hs) {
@@ -677,13 +800,24 @@
           const inner = document.createElement('div');
           inner.className = 'extra-zoom-inner';
           const img = document.createElement('img');
-          img.src = src;
           img.alt = 'Product info';
           inner.appendChild(img);
           wrapper.appendChild(inner);
-          if (hotspots.length) buildExtraHotspots(inner, hotspots);
-          setupExtraZoom(wrapper, inner);
           container.appendChild(wrapper);
+          if (hotspots.length) {
+            const build = () => {
+              requestAnimationFrame(() => {
+                buildExtraHotspots(wrapper, inner, hotspots);
+                setupExtraZoom(wrapper, inner);
+              });
+            };
+            img.onload = build;
+            img.src = src;
+            if (img.complete) build();
+          } else {
+            img.src = src;
+            setupExtraZoom(wrapper, inner);
+          }
         });
       }
 
