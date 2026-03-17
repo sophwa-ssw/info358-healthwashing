@@ -10,7 +10,7 @@ try:
 except ImportError:
     MongoClient = None
 
-PORT = 8080
+PORT = int(os.environ.get("PORT", 8080))
 ROOT = os.path.dirname(os.path.abspath(__file__))
 HOTSPOTS_FILE = os.path.join(ROOT, 'src', 'data', 'hotspots.json')
 
