@@ -18,8 +18,8 @@ HOTSPOTS_FILE = os.path.join(ROOT, 'src', 'data', 'hotspots.json')
 # Preferred: provide full URI via MONGODB_URI (e.g. from GitHub Secrets).
 # Falls back to local MongoDB for dev if not set.
 MONGODB_URI = os.environ.get('MONGODB_URI') or 'mongodb://localhost:27017/'
-MONGODB_DB = os.environ.get('MONGODB_DB', 'info358_healthwashing')
-MONGODB_COLLECTION = os.environ.get('MONGODB_COLLECTION', 'checkouts')
+MONGODB_DB = 'info358_healthwashing'
+MONGODB_COLLECTION = 'checkouts'
 
 ALLOWED_KEYS = {'front', 'ingredients', 'nutrition'}
 ALLOWED_PRODUCTS = {'vitaminwater', 'cliff-bar', 'activia-yogurt', 'skinny-pop', 'nature-valley-bars', 'naked-juice'}
