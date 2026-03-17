@@ -73,14 +73,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._error(500, str(e))
         elif self.path == '/checkout':
             length = int(self.headers.get('Content-Length', 0))
-            body = json.loads(self.rfile.read(length))
+            raw = self.rfile.read(length)
+            try:
+                body = json.loads(raw)
+            except Exception:
+                self._json_error(400, 'Invalid JSON')
+                return
 
             if not isinstance(body, dict):
-                self._error(400, 'Checkout payload must be an object')
+                self._json_error(400, 'Checkout payload must be an object')
                 return
 
             try:
                 validate_checkout_payload(body)
+                print(f'[checkout] payload={body}')
                 inserted_id = save_checkout(body)
 
                 self.send_response(200)
@@ -89,9 +95,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({'ok': True, 'insertedId': inserted_id}).encode())
                 print(f'[saved] checkout {inserted_id}')
             except ValueError as e:
-                self._error(400, str(e))
+                self._json_error(400, str(e))
             except Exception as e:
-                self._error(500, str(e))
+                print(f'[error] checkout failed: {repr(e)}')
+                self._json_error(500, str(e))
         else:
             self.send_response(404)
             self.end_headers()
@@ -100,6 +107,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_response(code)
         self.end_headers()
         self.wfile.write(msg.encode())
+
+    def _json_error(self, code, msg):
+        self.send_response(code)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps({'ok': False, 'error': msg}).encode())
 
 
 def read_hotspots():
@@ -131,10 +144,14 @@ def save_checkout(data):
     if MongoClient is None:
         raise RuntimeError('pymongo is not installed. Install it with "pip install pymongo".')
 
-    client = MongoClient(MONGODB_URI)
-    collection = client[MONGODB_DB][MONGODB_COLLECTION]
-    result = collection.insert_one(data)
-    client.close()
+    # Fail fast if Atlas/network/auth is misconfigured (useful on Render).
+    client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
+    try:
+        client.admin.command('ping')
+        collection = client[MONGODB_DB][MONGODB_COLLECTION]
+        result = collection.insert_one(data)
+    finally:
+        client.close()
     return str(result.inserted_id)
 
 

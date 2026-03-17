@@ -1,5 +1,6 @@
 import { IntroScene } from './scenes/IntroScene.js';
 import { StoreScene } from './scenes/StoreScene.js';
+import { EndingScene } from './scenes/EndingScene.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -23,7 +24,7 @@ const config = {
       debug: false
     }
   },
-  scene: [IntroScene, StoreScene]
+  scene: [IntroScene, StoreScene, EndingScene]
 };
 
 const game = new Phaser.Game(config);

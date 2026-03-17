@@ -1660,14 +1660,16 @@ export class StoreScene extends Phaser.Scene {
       });
 
       if (!response.ok) {
-        const message = await response.text();
-        throw new Error(message || 'Checkout failed');
+        const text = await response.text();
+        throw new Error(`HTTP ${response.status}: ${text || 'Checkout failed'}`);
       }
 
       const result = await response.json();
       console.log('Checkout saved:', result);
     } catch (error) {
       console.error('Failed to save checkout:', error);
+    } finally {
+      this.scene.start('EndingScene');
     }
   }
 
