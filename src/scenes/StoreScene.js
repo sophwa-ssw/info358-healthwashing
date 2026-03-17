@@ -68,14 +68,19 @@ export class StoreScene extends Phaser.Scene {
   createProducts() {
     this.products = [];
     this.inspectedProducts = new Set();
+    this.productTextureCache ??= new Map(); // color -> textureKey
 
     productsData.forEach(product => {
-      const g = this.make.graphics({ add: false });
-      g.fillStyle(product.color, 1);
-      g.fillRoundedRect(0, 0, 36, 36, 6);
-      const key = `product-${product.id}`;
-      g.generateTexture(key, 36, 36);
-      g.destroy();
+      let key = this.productTextureCache.get(product.color);
+      if (!key) {
+        const g = this.make.graphics({ add: false });
+        g.fillStyle(product.color, 1);
+        g.fillRoundedRect(0, 0, 36, 36, 6);
+        key = `product-color-${product.color.toString(16)}`;
+        g.generateTexture(key, 36, 36);
+        g.destroy();
+        this.productTextureCache.set(product.color, key);
+      }
 
       const sprite = this.add.sprite(product.position.x, product.position.y, key);
       sprite.setData('productData', product);
@@ -1649,28 +1654,28 @@ export class StoreScene extends Phaser.Scene {
     );
   }
 
-  async submitCheckout() {
+  submitCheckout() {
     const payload = this.buildCheckoutDocument();
 
-    try {
-      const response = await fetch('/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+    // Fire-and-forget: start ending scene immediately, log result when it arrives.
+    fetch('/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(async response => {
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`HTTP ${response.status}: ${text || 'Checkout failed'}`);
+        }
+        const result = await response.json();
+        console.log('Checkout saved:', result);
+      })
+      .catch(error => {
+        console.error('Failed to save checkout:', error);
       });
 
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`HTTP ${response.status}: ${text || 'Checkout failed'}`);
-      }
-
-      const result = await response.json();
-      console.log('Checkout saved:', result);
-    } catch (error) {
-      console.error('Failed to save checkout:', error);
-    } finally {
-      this.scene.start('EndingScene');
-    }
+    this.scene.start('EndingScene');
   }
 
   /* ── Collision helpers ── */

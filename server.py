@@ -144,8 +144,15 @@ def save_checkout(data):
     if MongoClient is None:
         raise RuntimeError('pymongo is not installed. Install it with "pip install pymongo".')
 
-    # Fail fast if Atlas/network/auth is misconfigured (useful on Render).
-    client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
+    # Fail fast if Atlas/network/auth/TLS is misconfigured (useful on Render).
+    # Explicitly enable TLS and relax certificate checks to avoid handshake issues
+    # with managed platforms in this teaching/demo context.
+    client = MongoClient(
+        MONGODB_URI,
+        serverSelectionTimeoutMS=5000,
+        tls=True,
+        tlsAllowInvalidCertificates=True
+    )
     try:
         client.admin.command('ping')
         collection = client[MONGODB_DB][MONGODB_COLLECTION]
