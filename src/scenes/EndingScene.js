@@ -62,6 +62,7 @@ export class EndingScene extends Phaser.Scene {
 
     this.buildNavigation();
     this.showPage(0);
+    this.loadCheckoutStats();
   }
 
   buildNavigation() {
@@ -260,12 +261,77 @@ export class EndingScene extends Phaser.Scene {
 
     bulletMeasurer.destroy();
 
+    // Append checkout stats on first page
+    if (index === 0) {
+      const summary = this.buildStatsSummary();
+      if (this.statsText) {
+        this.statsText.setText(summary);
+        this.statsText.setPosition(blockLeft, y);
+      } else {
+        this.statsText = this.add.text(blockLeft, y, summary, {
+          ...textStyle,
+          fontSize: 16,
+          color: '#636e72'
+        }).setOrigin(0, 0);
+        this.contentContainer.add(this.statsText);
+      }
+      y += this.statsText.height + 24;
+    }
+
     this.contentHeight = y + 20;
     this.maxScroll = Math.max(0, this.contentHeight - this.contentAreaHeight);
     this.contentContainer.setPosition(width / 2, this.contentAreaTop - this.scrollOffset);
 
     this.updateButtons();
     this.updateScrollbar();
+  }
+
+  buildStatsSummary() {
+    if (!this.checkoutStats) {
+      return 'Loading checkout choices...';
+    }
+
+    const total = this.checkoutStats.total ?? 0;
+    const products = this.checkoutStats.products ?? {};
+    const lines = [];
+
+    lines.push(`Total checkouts recorded: ${total}`);
+
+    Object.entries(products).forEach(([id, count]) => {
+      const pretty = id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      lines.push(`${pretty}: ${count} chose "Buy"`);
+    });
+
+    return lines.join('\n');
+  }
+
+  async loadCheckoutStats() {
+    try {
+      const response = await fetch('/checkout-stats');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const data = await response.json();
+      if (!data.ok) {
+        throw new Error(data.error || 'Failed to load stats');
+      }
+      this.checkoutStats = { total: data.total || 0, products: data.products || {} };
+
+      // If we're on the first page, refresh the stats text in place
+      if (this.currentPage === 0 && this.statsText) {
+        const summary = this.buildStatsSummary();
+        this.statsText.setText(summary);
+
+        // Recompute layout and scrollbar
+        const width = this.cameras.main.width;
+        this.contentHeight = this.statsText.y + this.statsText.height + 44;
+        this.maxScroll = Math.max(0, this.contentHeight - this.contentAreaHeight);
+        this.contentContainer.setPosition(width / 2, this.contentAreaTop - this.scrollOffset);
+        this.updateScrollbar();
+      }
+    } catch (error) {
+      console.error('Failed to load checkout stats:', error);
+    }
   }
 
   updateScrollbar() {

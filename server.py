@@ -17,7 +17,7 @@ HOTSPOTS_FILE = os.path.join(ROOT, 'src', 'data', 'hotspots.json')
 # MongoDB Atlas connection settings.
 # Preferred: provide full URI via MONGODB_URI (e.g. from GitHub Secrets).
 # Falls back to local MongoDB for dev if not set.
-MONGODB_URI = os.environ.get('MONGODB_URI') or 'mongodb://localhost:27017/'
+MONGODB_URI = os.environ.get('MONGODB_URI')
 MONGODB_DB = 'info358_healthwashing'
 MONGODB_COLLECTION = 'checkouts'
 
@@ -39,6 +39,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(data).encode())
             except Exception as e:
                 self._error(500, str(e))
+        elif self.path == '/checkout-stats':
+            try:
+                stats = get_checkout_stats()
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'ok': True, **stats}).encode())
+            except Exception as e:
+                self._json_error(500, str(e))
         else:
             super().do_GET()
 
@@ -153,6 +162,7 @@ def save_checkout(data):
         tls=True,
         tlsAllowInvalidCertificates=True
     )
+
     try:
         client.admin.command('ping')
         collection = client[MONGODB_DB][MONGODB_COLLECTION]
@@ -160,6 +170,32 @@ def save_checkout(data):
     finally:
         client.close()
     return str(result.inserted_id)
+
+
+def get_checkout_stats():
+    if MongoClient is None:
+        raise RuntimeError('pymongo is not installed. Install it with "pip install pymongo".')
+
+    client = MongoClient(
+        MONGODB_URI,
+        serverSelectionTimeoutMS=5000,
+        tls=True,
+        tlsAllowInvalidCertificates=True
+    )
+
+    try:
+        client.admin.command('ping')
+        collection = client[MONGODB_DB][MONGODB_COLLECTION]
+        total = collection.count_documents({})
+
+        product_counts = {}
+        for product_id in ALLOWED_PRODUCTS:
+          # Count how many checkouts had this product marked as buy=true
+          product_counts[product_id] = collection.count_documents({product_id: True})
+
+        return {'total': total, 'products': product_counts}
+    finally:
+        client.close()
 
 
 if __name__ == '__main__':
