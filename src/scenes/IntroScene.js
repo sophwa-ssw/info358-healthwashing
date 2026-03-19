@@ -74,6 +74,7 @@ export class IntroScene extends Phaser.Scene {
           "• Hover over parts of the package to zoom in and take a closer look. Click on elements that you think may be misleading or related to healthwashing, such as claims, buzzwords, imagery, or highlighted nutrients.",
           "• After selecting something, explain your reasoning to Alex in the pop-up comment box. Once you submit your explanation, you'll be able to compare your annotations with our research-based analysis.",
           "• Then decide whether you want to add the item to Alex's shopping cart or leave it on the shelf. Continue exploring the store and analyzing products until you've reached all of the items on the checklist.",
+          "• You can resize the shopping list by dragging the top-left corner of the list, or collapse it by clicking the toggle button in the top-right corner.",
           "You're ready to start shopping!"
         ]
       }

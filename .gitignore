@@ -4,6 +4,9 @@ node_modules/
 .venv/
 
 mongo_pwd.txt
+.env
+venv/
+healthwashing__venv/
 
 __pycache__/
 *.pyc

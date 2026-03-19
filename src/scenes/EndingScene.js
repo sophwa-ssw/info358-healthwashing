@@ -1,3 +1,5 @@
+import { productsData } from '../data/products.js';
+
 export class EndingScene extends Phaser.Scene {
   constructor() {
     super({ key: 'EndingScene' });
@@ -15,6 +17,12 @@ export class EndingScene extends Phaser.Scene {
         content: [
           "You've reached the end of Alex's grocery trip. Along the way, you explored how food and drink packages can use healthwashing—claims, imagery, and buzzwords that make products seem healthier than they really are.",
           "By slowing down to notice specific words, symbols, and design choices, you practiced looking beyond the front of the package and thinking about the full nutritional picture."
+        ]
+      },
+      {
+        title: 'Compare Your Results',
+        content: [
+          "Here’s how players have been answering the shopping list so far. This updates live based on the checkouts recorded."
         ]
       },
       {
@@ -77,7 +85,6 @@ export class EndingScene extends Phaser.Scene {
 
     this.buildNavigation();
     this.showPage(0);
-    this.loadCheckoutStats();
   }
 
   buildNavigation() {
@@ -227,6 +234,7 @@ export class EndingScene extends Phaser.Scene {
     this.currentPage = index;
     this.scrollOffset = 0;
     this.contentContainer.removeAll(true);
+    this.statsText = null;
 
     const width = this.cameras.main.width;
     const page = this.pages[index];
@@ -282,21 +290,14 @@ export class EndingScene extends Phaser.Scene {
 
     bulletMeasurer.destroy();
 
-    // Append checkout stats on first page
-    if (index === 0) {
-      const summary = this.buildStatsSummary();
-      if (this.statsText) {
-        this.statsText.setText(summary);
-        this.statsText.setPosition(blockLeft, y);
-      } else {
-        this.statsText = this.add.text(blockLeft, y, summary, {
-          ...textStyle,
-          fontSize: 16,
-          color: '#636e72'
-        }).setOrigin(0, 0);
-        this.contentContainer.add(this.statsText);
-      }
-      y += this.statsText.height + 24;
+    // Append checkout stats on "Compare Your Results" page
+    if (this.pages[index]?.title === 'Compare Your Results') {
+      // Always refresh when user visits (or revisits) the page
+      this.checkoutStats = null;
+      this.loadCheckoutStats();
+
+      const { nextY } = this.renderCompareStats(blockLeft, y, textStyle, textWidth);
+      y = nextY;
     }
 
     this.contentHeight = y + 20;
@@ -326,7 +327,102 @@ export class EndingScene extends Phaser.Scene {
     return lines.join('\n');
   }
 
+  renderCompareStats(blockLeft, y, textStyle, textWidth) {
+    // Clear any prior references (contentContainer is already rebuilt each page)
+    this.compareStatsRows = [];
+
+    const totalLine = this.add.text(blockLeft, y, 'Loading checkout choices...', {
+      ...textStyle,
+      fontSize: 18,
+      color: '#2d3436',
+      fontStyle: 'bold'
+    }).setOrigin(0, 0);
+    this.contentContainer.add(totalLine);
+    this.totalStatsText = totalLine;
+    y += totalLine.height + 22;
+
+    const barW = Math.min(520, textWidth - 40);
+    const barH = 10;
+    const barRadius = 6;
+    const gapAfterBar = 18;
+
+    for (const product of productsData) {
+      const pretty = product.id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const lineText = this.add.text(blockLeft, y, `${pretty}: ...`, {
+        ...textStyle,
+        fontSize: 16,
+        color: '#636e72'
+      }).setOrigin(0, 0);
+      this.contentContainer.add(lineText);
+      y += lineText.height + 8;
+
+      const barX = blockLeft;
+      const barY = y;
+
+      const outline = this.add.graphics();
+      outline.lineStyle(2, 0xffffff, 1);
+      outline.strokeRoundedRect(barX, barY, barW, barH, barRadius);
+      this.contentContainer.add(outline);
+
+      const fill = this.add.graphics();
+      fill.fillStyle(product.color, 1);
+      // start empty; updated when stats load
+      fill.fillRoundedRect(barX, barY, 0, barH, barRadius);
+      this.contentContainer.add(fill);
+
+      y += barH + gapAfterBar;
+
+      this.compareStatsRows.push({
+        id: product.id,
+        color: product.color,
+        text: lineText,
+        outline,
+        fill,
+        barX,
+        barY,
+        barW,
+        barH,
+        barRadius
+      });
+    }
+
+    // First render with whatever we have (likely loading state)
+    this.updateCompareStatsUI();
+
+    return { nextY: y };
+  }
+
+  updateCompareStatsUI() {
+    if (!this.totalStatsText || !this.compareStatsRows) return;
+
+    if (!this.checkoutStats) {
+      this.totalStatsText.setText('Loading checkout choices...');
+      for (const row of this.compareStatsRows) {
+        row.text.setText(`${row.id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}: ...`);
+        row.fill.clear();
+      }
+      return;
+    }
+
+    const total = this.checkoutStats.total ?? 0;
+    const products = this.checkoutStats.products ?? {};
+    this.totalStatsText.setText(`Total checkouts recorded: ${total}`);
+
+    for (const row of this.compareStatsRows) {
+      const buyCount = products[row.id] ?? 0;
+      const pct = total > 0 ? Math.round((buyCount / total) * 100) : 0;
+      const pretty = row.id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      row.text.setText(`${pretty}: ${buyCount} chose "Buy" (${pct}%)`);
+
+      row.fill.clear();
+      const w = Math.round((pct / 100) * row.barW);
+      row.fill.fillStyle(row.color, 1);
+      row.fill.fillRoundedRect(row.barX, row.barY, w, row.barH, row.barRadius);
+    }
+  }
+
   async loadCheckoutStats() {
+    const requestedForPage = this.currentPage;
     try {
       const response = await fetch('/checkout-stats');
       if (!response.ok) {
@@ -338,14 +434,15 @@ export class EndingScene extends Phaser.Scene {
       }
       this.checkoutStats = { total: data.total || 0, products: data.products || {} };
 
-      // If we're on the first page, refresh the stats text in place
-      if (this.currentPage === 0 && this.statsText) {
-        const summary = this.buildStatsSummary();
-        this.statsText.setText(summary);
+      // Refresh stats text if we're still on the compare page we requested for
+      if (this.currentPage === requestedForPage && this.pages[this.currentPage]?.title === 'Compare Your Results') {
+        this.updateCompareStatsUI();
 
-        // Recompute layout and scrollbar
+        // Recompute layout and scrollbar (last bar + padding)
         const width = this.cameras.main.width;
-        this.contentHeight = this.statsText.y + this.statsText.height + 44;
+        const lastRow = this.compareStatsRows?.[this.compareStatsRows.length - 1];
+        const bottomY = lastRow ? (lastRow.barY + lastRow.barH + 44) : (this.totalStatsText?.y + this.totalStatsText?.height + 44);
+        this.contentHeight = bottomY;
         this.maxScroll = Math.max(0, this.contentHeight - this.contentAreaHeight);
         this.contentContainer.setPosition(width / 2, this.contentAreaTop - this.scrollOffset);
         this.updateScrollbar();
