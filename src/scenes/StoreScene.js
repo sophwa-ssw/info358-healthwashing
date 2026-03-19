@@ -11,7 +11,7 @@ export class StoreScene extends Phaser.Scene {
 
   preload() {
     this.load.image('player', 'assets/graphics/info358_topdown.png');
-    this.load.image('bkg', 'assets/graphics/test_bkg.png');
+    this.load.image('bkg', 'assets/graphics/info358bkg-final.png');
   }
 
   create() {
@@ -1391,7 +1391,7 @@ export class StoreScene extends Phaser.Scene {
   setupHUD() {
     // Bottom-right corner; avoids player (400, 550) and products (200,500), (300,250), (550,400)
     const panelW = 230;
-    const panelH = 205;
+    const panelH = 215;
     const panelLeft = 800 - panelW - 10;
     const panelY = 600 - panelH - 10;
     const depth = 1001;
@@ -1403,7 +1403,7 @@ export class StoreScene extends Phaser.Scene {
 
     const titleBox = this.add.graphics().setDepth(depth);
 
-    const title = this.add.text(800 - panelW + 55, panelY + 14, 'Shopping List', {
+    const title = this.add.text(800 - panelW + 50, panelY + 14, 'Shopping List', {
       fontSize: '14px',
       fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
       color: '#2d3436',
@@ -1426,11 +1426,10 @@ export class StoreScene extends Phaser.Scene {
     }).setOrigin(0.5, 0).setDepth(depth);
 
     const left = panelLeft + 10;
-    const rowHeight = 25;
+    const rowHeight = 20;
     const boxSize = 12;
     const labelStyle = { fontSize: '12px', fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif', color: '#2d3436' };
 
-    // Header row: Buy / Don't buy at top, with padding below so it doesn't overlap first row
     const headerY = panelY + 32;
     const headerToFirstRowPadding = 25;
     const buyColX = panelLeft + panelW - 80;
@@ -1732,8 +1731,8 @@ export class StoreScene extends Phaser.Scene {
     let nx = this.player.x + vx * speed * dt;
     let ny = this.player.y + vy * speed * dt;
 
-    const hw = 12;
-    const hh = 14;
+    const hw = 22;
+    const hh = 26;
 
     // Clamp to world bounds
     nx = Phaser.Math.Clamp(nx, hw, 800 - hw);

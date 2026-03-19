@@ -2,8 +2,8 @@ export const productsData = [
   {
     id: 'vitaminwater',
     name: 'Vitaminwater Power-C',
-    position: { x: 595, y: 190 },
-    color: 0xe17055,
+    position: { x: 105, y: 300 },
+    color: 0xf23b16,
     images: {
       front: 'assets/products/vitaminwater/71EdjN9TJKL._SL1500_.jpg',
       ingredients: 'assets/products/vitaminwater/00786162010001_577.jpeg',
@@ -39,8 +39,8 @@ export const productsData = [
   {
     id: 'cliff-bar',
     name: 'Cliff Bar',
-    position: { x: 300, y: 500 },
-    color: 0xfdcb6e,
+    position: { x: 650, y: 100 },
+    color: 0x97dbda,
     images: {
       front: 'assets/products/cliff-bar/image10.png',
       ingredients: 'assets/products/cliff-bar/image4.png',
@@ -78,8 +78,8 @@ export const productsData = [
   {
     id: 'activia-yogurt',
     name: 'Activia Yogurt',
-    position: { x: 200, y: 500 },
-    color: 0xa29bfe,
+    position: { x: 220, y: 80 },
+    color: 0x7fba61,
     images: {
       front: 'assets/products/activia-yogurt/image9.png',
       ingredients: 'assets/products/activia-yogurt/image1.png',
@@ -121,8 +121,8 @@ export const productsData = [
   {
     id: 'skinny-pop',
     name: 'Skinny Pop',
-    position: { x: 400, y: 300 },
-    color: 0x00b894,
+    position: { x: 150, y: 470 },
+    color: 0x8be05a,
     images: {
       front: 'assets/products/skinny-pop/front.png',
       ingredients: 'assets/products/skinny-pop/ingred.png',
@@ -146,8 +146,8 @@ export const productsData = [
   {
     id: 'nature-valley-bars',
     name: 'Nature Valley Bars',
-    position: { x: 500, y: 400 },
-    color: 0xe67e22,
+    position: { x: 650, y: 330 },
+    color: 0xf0dd0e,
     images: {
       front: 'assets/products/nature-valley-bars/front.png',
       ingredients: 'assets/products/nature-valley-bars/nutrition-and-ingred.png',
@@ -179,8 +179,8 @@ export const productsData = [
   {
     id: 'naked-juice',
     name: 'Naked Juice',
-    position: { x: 550, y: 350 },
-    color: 0xfd79a8,
+    position: { x: 425, y: 150 },
+    color: 0xed82d8,
     images: {
       front: 'assets/products/naked-juice/front.png',
       ingredients: 'assets/products/naked-juice/nutrition+ingred.png',

@@ -3,6 +3,10 @@ export class IntroScene extends Phaser.Scene {
     super({ key: 'IntroScene' });
   }
 
+  preload() {
+    this.load.image('alexAvatar', 'assets/graphics/info358_avatar.png');
+  }
+
   create() {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
@@ -275,6 +279,9 @@ export class IntroScene extends Phaser.Scene {
 
     let y = 20;
     const blockLeft = -textWidth / 2;
+    let floatImageBottomY = null;
+    let floatImageWidth = 0;
+    const floatGap = 18;
 
     if (page.title) {
       const title = this.add.text(0, y, page.title, {
@@ -286,6 +293,17 @@ export class IntroScene extends Phaser.Scene {
       }).setOrigin(0.5, 0);
       this.contentContainer.add(title);
       y += title.height + 28;
+    }
+
+    // "Meet Alex!" page: float avatar image in content area and wrap text around it.
+    if (index === 0) {
+      const avatarW = 190;
+      const avatarH = 238;
+      const avatar = this.add.image(blockLeft, y + 6, 'alexAvatar').setOrigin(0, 0);
+      avatar.setDisplaySize(avatarW, avatarH);
+      this.contentContainer.add(avatar);
+      floatImageBottomY = (y + 6) + avatarH;
+      floatImageWidth = avatarW;
     }
 
     const bulletMeasurer = this.add.text(0, 0, bulletPrefix, textStyle).setVisible(false);
@@ -319,7 +337,13 @@ export class IntroScene extends Phaser.Scene {
         this.contentContainer.add(contentText);
         y += contentText.height + 24;
       } else if (typeof item === 'string') {
-        const text = this.add.text(blockLeft, y, item, textStyle).setOrigin(0, 0);
+        const shouldWrapAroundAvatar = floatImageBottomY !== null && y < floatImageBottomY;
+        const x = shouldWrapAroundAvatar ? (blockLeft + floatImageWidth + floatGap) : blockLeft;
+        const wrapWidth = shouldWrapAroundAvatar ? (textWidth - floatImageWidth - floatGap) : textWidth;
+        const text = this.add.text(x, y, item, {
+          ...textStyle,
+          wordWrap: { width: wrapWidth, useAdvancedWrap: true }
+        }).setOrigin(0, 0);
         this.contentContainer.add(text);
         y += text.height + 24;
       }
