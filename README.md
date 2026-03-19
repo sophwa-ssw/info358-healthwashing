@@ -5,7 +5,9 @@
 ### Created by Achana Peiris, Maya Odenheim, and Sophie Wang
 
 Code: Maya, Sophie
+
 Content & Research: Achana, Maya
+
 Art: Sophie
 
 Cursor was used in the creation of this project
