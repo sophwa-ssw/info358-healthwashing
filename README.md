@@ -2,10 +2,10 @@
 
 ## Food Media Project: Healthwashing for INFO 358
 
-## Created by Achana Peiris, Maya Odenheim, and Sophie Wang
+### Created by Achana Peiris, Maya Odenheim, and Sophie Wang
 
-### Code: Maya, Sophie
-### Content & Research: Achana, Maya
-### Art: Sophie
+Code: Maya, Sophie
+Content & Research: Achana, Maya
+Art: Sophie
 
-### Cursor was used in the creation of this project
+Cursor was used in the creation of this project
