@@ -22,23 +22,19 @@ export class EndingScene extends Phaser.Scene {
       {
         title: 'Compare Your Results',
         content: [
-          "Here’s how players have been answering the shopping list so far. This updates live based on the checkouts recorded."
+          "Compare your results with other players to see how popular certain products are!"
         ]
       },
       {
-        title: 'Bringing It Back to Real Life',
+        title: 'Broader Implications',
         content: [
-          "The next time you're in a store (or scrolling through delivery apps), try using the same lens you used here:",
-          "• Ask what the package is trying to make you feel or assume.",
-          "• Look for what information is missing or minimized, especially around added sugars, sodium, and serving sizes.",
-          "• Treat health buzzwords as starting points for questions, not proof that something is a healthy choice."
+          "Understanding tactics like healthwashing helps consumers interpret food media and marketing more critically. When people are aware of how labels, nutrient claims, and packaging design can shape perception, they are better equipped to evaluate products beyond the quick messages presented on the front of the package.Educating consumers about these strategies can also encourage greater transparency in the food industry. When marketing practices are more widely recognized and discussed, companies may be more likely to present information clearly and responsibly. Projects like this contribute to building stronger media literacy around food, helping consumers make more informed decisions while also promoting more ethical communication within food marketing."
         ]
       },
       {
-        title: 'Where to Go From Here',
+        title: 'Ethical Considerations',
         content: [
-          "If this experience helped you notice new things about packaging, consider sharing what you learned with a friend or roommate the next time you shop together.",
-          "Thank you for taking the time to explore healthwashing with Alex. We hope this gives you a bit more confidence—and a few more tools—for navigating the store on your own."
+          "Our game encourages users to think critically about food products and the health-related claims displayed on their packaging. However, we recognized that focusing only on the “healthiness” of food can create a restrictive mindset that overlooks the many other values food provides, including culture, enjoyment, affordability, and personal preference. Because of this, we were careful not to frame foods as simply “healthy” or “unhealthy.” Instead, the goal of the game is to highlight how marketing strategies can influence perceptions of health. For each product, we provide research-backed annotations that explain the claims being made and the marketing techniques being used. Importantly, the game never explicitly tells users whether a product is healthy or whether they should or should not purchase it. Instead, it provides information that allows players to make their own informed decisions about whether a product fits their needs and priorities. By doing this, the project encourages critical thinking about food marketing without promoting restrictive ideas about what people should eat."
         ]
       },
       {
@@ -53,7 +49,7 @@ export class EndingScene extends Phaser.Scene {
       {
         title: 'AI Use',
         content: [
-          "Given that we had no experience coding games or really any website with this level of interactivity, we wanted to spin up a minimal viable product as quickly as possible which AI and 'vibe coding' is really good for. We mostly used Cursor and had it help us understand concepts, decide on a tech stack, generate starter code, and debugging, which allowed us to focus on core functionality and iterate more quickly."
+          "Given that we had no experience coding games in Phaser or websites with high levels of interactivity and the short timeframe, we wanted to spin up a minimal viable product as quickly as possible which AI and 'vibe coding' are very helpful for. We mostly used Cursor and had it help us understand concepts, decide on a tech stack, generate starter code, and debugging, which allowed us to focus on core functionality and iterate more quickly."
         ]
       }
     ];
