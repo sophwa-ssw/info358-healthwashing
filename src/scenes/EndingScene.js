@@ -15,8 +15,9 @@ export class EndingScene extends Phaser.Scene {
       {
         title: 'Thanks for Shopping with Alex!',
         content: [
-          "You've reached the end of Alex's grocery trip. Along the way, you explored how food and drink packages can use healthwashing—claims, imagery, and buzzwords that make products seem healthier than they really are.",
-          "By slowing down to notice specific words, symbols, and design choices, you practiced looking beyond the front of the package and thinking about the full nutritional picture."
+          "We hope you had fun helping Alex choose what food items to buy!",
+          "Along the way, you learned more about healthwashing, specifically how certain marketing tactics and claims can make products seem more nutritious than they actually are, or rely on claims that aren’t very meaningful.",
+          "Next time you’re shopping, you’re now better equipped to make informed decisions about the food you buy!"
         ]
       },
       {
