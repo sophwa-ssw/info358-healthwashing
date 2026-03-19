@@ -32,6 +32,21 @@ export class EndingScene extends Phaser.Scene {
           "If this experience helped you notice new things about packaging, consider sharing what you learned with a friend or roommate the next time you shop together.",
           "Thank you for taking the time to explore healthwashing with Alex. We hope this gives you a bit more confidence—and a few more tools—for navigating the store on your own."
         ]
+      },
+      {
+        title: 'About Us',
+        content: [
+          "This project was created by a group of college students learning how to navigate food and health on our own for the first time. Many of us grew up in households where food was deeply connected to culture, family, and home-cooked meals. Moving away for college meant suddenly being responsible for grocery shopping and daily food choices in a completely different environment.",
+          "For the first time, many of us were relying on packaged foods, grocery store aisles, and quick decisions about what seemed like the \"healthiest\" options. Like a lot of students, it was easy to trust what appeared on the front of a package without thinking too much about it. Those choices sometimes came with uncertainty about whether the foods we were buying actually matched the healthy habits we were trying to build.",
+          "Working on this project gave us the chance to slow down and look more closely at the kinds of messages we see every day when we shop for food. It also made us reflect on our own experiences as students balancing culture, convenience, health goals, and limited time.",
+          "This game grew out of that shared experience. It represents our attempt to turn something we struggled with into something interactive and useful for others who might be navigating the same challenges."
+        ]
+      },
+      {
+        title: 'AI Use',
+        content: [
+          "Given that we had no experience coding games or really any website with this level of interactivity, we wanted to spin up a minimal viable product as quickly as possible which AI and 'vibe coding' is really good for. We mostly used Cursor and had it help us understand concepts, decide on a tech stack, generate starter code, and debugging, which allowed us to focus on core functionality and iterate more quickly."
+        ]
       }
     ];
 
@@ -92,11 +107,9 @@ export class EndingScene extends Phaser.Scene {
     });
 
     this.nextBtnBg = this.add.graphics();
-    this.nextBtn = this.add.text(this.nextBtnCenterX, this.buttonsY, 'Finish', {
-      ...arrowStyle,
-      fontSize: 18
-    }).setOrigin(0.5);
-    this.nextHit = this.add.zone(this.nextBtnCenterX, this.buttonsY, 90, btnSize).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    this.finishBtnBg = this.add.graphics();
+    this.nextBtn = this.add.text(this.nextBtnCenterX, this.buttonsY, '→', arrowStyle).setOrigin(0.5);
+    this.nextHit = this.add.zone(this.nextBtnCenterX, this.buttonsY, btnSize, btnSize).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.nextHit.on('pointerdown', () => {
       if (this.currentPage < this.pages.length - 1) {
         this.showPage(this.currentPage + 1);
@@ -139,26 +152,30 @@ export class EndingScene extends Phaser.Scene {
     const isFirst = this.currentPage === 0;
     const isLast = this.currentPage === this.pages.length - 1;
     const btnSize = 44;
+    const finishBtnWidth = 100;
 
     this.prevBtn.setVisible(!isFirst);
     this.prevHit.setVisible(!isFirst);
     this.prevBtnBg.setVisible(!isFirst);
 
-    const finishBtnWidth = 90;
-    this.nextHit.setSize(finishBtnWidth, btnSize);
-    this.nextBtnBg.setVisible(true);
+    this.nextBtnBg.setVisible(false);
+    this.finishBtnBg.setVisible(false);
 
     const prevBtnLeft = this.prevBtnCenterX - btnSize / 2;
-    const nextBtnLeft = this.nextBtnCenterX - finishBtnWidth / 2;
+    const nextBtnLeft = this.nextBtnCenterX - btnSize / 2;
+    const finishBtnLeft = this.nextBtnCenterX - finishBtnWidth / 2;
 
     if (isLast) {
-      this.nextBtn.setText('Finish');
+      this.nextBtn.setText('Start Over').setFontSize(16);
+      this.nextHit.setSize(finishBtnWidth, btnSize);
+      this.finishBtnBg.setVisible(true);
+      this.drawButton(this.finishBtnBg, finishBtnLeft, this.buttonsY - btnSize / 2, finishBtnWidth, btnSize, 0x00b894);
     } else {
-      this.nextBtn.setText('Next →');
+      this.nextBtn.setText('→').setFontSize(24);
+      this.nextHit.setSize(btnSize, btnSize);
+      this.nextBtnBg.setVisible(true);
+      this.drawButton(this.nextBtnBg, nextBtnLeft, this.buttonsY - btnSize / 2, btnSize, btnSize, 0x636e72);
     }
-
-    this.nextBtnBg.clear();
-    this.drawButton(this.nextBtnBg, nextBtnLeft, this.buttonsY - btnSize / 2, finishBtnWidth, btnSize, 0x636e72);
 
     if (!isFirst) {
       this.drawButton(this.prevBtnBg, prevBtnLeft, this.buttonsY - btnSize / 2, btnSize, btnSize, 0x636e72);
@@ -191,14 +208,18 @@ export class EndingScene extends Phaser.Scene {
 
   updateButtonHover(hover, isPrev) {
     const btnSize = 44;
-    const finishBtnWidth = 90;
+    const finishBtnWidth = 100;
     const prevBtnLeft = this.prevBtnCenterX - btnSize / 2;
-    const nextBtnLeft = this.nextBtnCenterX - finishBtnWidth / 2;
-    const color = hover ? 0x4a5568 : 0x636e72;
+    const nextBtnLeft = this.nextBtnCenterX - btnSize / 2;
+    const finishBtnLeft = this.nextBtnCenterX - finishBtnWidth / 2;
     if (isPrev && this.currentPage > 0) {
+      const color = hover ? 0x4a5568 : 0x636e72;
       this.drawButton(this.prevBtnBg, prevBtnLeft, this.buttonsY - btnSize / 2, btnSize, btnSize, color);
+    } else if (!isPrev && this.currentPage < this.pages.length - 1) {
+      const color = hover ? 0x4a5568 : 0x636e72;
+      this.drawButton(this.nextBtnBg, nextBtnLeft, this.buttonsY - btnSize / 2, btnSize, btnSize, color);
     } else if (!isPrev) {
-      this.drawButton(this.nextBtnBg, nextBtnLeft, this.buttonsY - btnSize / 2, finishBtnWidth, btnSize, color);
+      this.drawButton(this.finishBtnBg, finishBtnLeft, this.buttonsY - btnSize / 2, finishBtnWidth, btnSize, hover ? 0x00997a : 0x00b894);
     }
   }
 

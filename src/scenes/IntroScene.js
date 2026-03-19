@@ -187,7 +187,7 @@ export class IntroScene extends Phaser.Scene {
 
     const startBtnWidth = 80;
     if (isLast) {
-      this.nextBtn.setText('▶ Start').setFontSize(16);
+      this.nextBtn.setText('Start ▶').setFontSize(16);
       this.nextHit.setSize(startBtnWidth, btnSize);
     } else {
       this.nextBtn.setText('→').setFontSize(24);
