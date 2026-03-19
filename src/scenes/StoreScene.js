@@ -1390,10 +1390,9 @@ export class StoreScene extends Phaser.Scene {
 
   setupHUD() {
     // Bottom-right corner; avoids player (400, 550) and products (200,500), (300,250), (550,400)
-    const panelW = 230;
-    const panelH = 215;
-    const panelLeft = 800 - panelW - 10;
-    const panelY = 600 - panelH - 10;
+    const defaultPanelW = 230;
+    const defaultPanelH = 215;
+    const panelMargin = 10;
     const depth = 1001;
     const collapsedH = 46;
     this.shoppingListCollapsed = false;
@@ -1403,8 +1402,14 @@ export class StoreScene extends Phaser.Scene {
 
     const titleBox = this.add.graphics().setDepth(depth);
 
-    const title = this.add.text(800 - panelW + 50, panelY + 14, 'Shopping List', {
-      fontSize: '14px',
+    const baseRowHeight = 20;
+    const baseBoxSize = 12;
+    const baseLabelFontSize = 12;
+    const baseTitleFontSize = 14;
+    const baseCheckoutFontSize = 11;
+
+    const title = this.add.text(0, 0, 'Shopping List', {
+      fontSize: `${baseTitleFontSize}px`,
       fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
       color: '#2d3436',
       lineSpacing: 4,
@@ -1412,54 +1417,100 @@ export class StoreScene extends Phaser.Scene {
     }).setOrigin(0.5, 0).setDepth(depth);
 
     const toggle = this.add.graphics().setDepth(depth);
-    const toggleZone = this.add.zone(panelLeft + panelW - 30, panelY + 10, 20, 20)
+    const toggleZone = this.add.zone(0, 0, 20, 20)
       .setOrigin(0, 0)
       .setInteractive({ useHandCursor: true })
       .setDepth(depth);
 
-    const buyTitle = this.add.text(800 - panelW + 165, panelY + 14, 'Buy?', {
-      fontSize: '14px',
+    const buyTitle = this.add.text(0, 0, 'Buy?', {
+      fontSize: `${baseTitleFontSize}px`,
       fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
       color: '#2d3436',
       lineSpacing: 4,
       fontStyle: 'bold'
     }).setOrigin(0.5, 0).setDepth(depth);
 
-    const left = panelLeft + 10;
-    const rowHeight = 20;
-    const boxSize = 12;
-    const labelStyle = { fontSize: '12px', fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif', color: '#2d3436' };
+    const rowHeight = baseRowHeight;
+    const boxSize = baseBoxSize;
+    const labelStyle = { fontSize: `${baseLabelFontSize}px`, fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif', color: '#2d3436' };
 
-    const headerY = panelY + 32;
     const headerToFirstRowPadding = 25;
-    const buyColX = panelLeft + panelW - 80;
-    const dontBuyColX = panelLeft + panelW - 40;
-    const dividerX = buyColX - 12;
     const divider = this.add.graphics().setDepth(depth);
-    divider.lineStyle(1.5, 0x636e72, 0.35);
-    divider.lineBetween(dividerX, headerY + 2, dividerX, panelY + panelH - 54);
-    const yesHeader = this.add.text(buyColX, headerY + 5, 'Y', { ...labelStyle }).setOrigin(0, 0).setDepth(depth);
-    const noHeader = this.add.text(dontBuyColX, headerY + 5, 'N', { ...labelStyle }).setOrigin(0, 0).setDepth(depth);
+    const yesHeader = this.add.text(0, 0, 'Y', { ...labelStyle }).setOrigin(0, 0).setDepth(depth);
+    const noHeader = this.add.text(0, 0, 'N', { ...labelStyle }).setOrigin(0, 0).setDepth(depth);
+
+    // Resize handle (top-left). Drag up/left to expand, down/right to shrink (clamped).
+    const resizeHandle = this.add.graphics().setDepth(depth);
+    const resizeZone = this.add.zone(0, 0, 18, 18)
+      .setOrigin(0, 0)
+      .setInteractive({ useHandCursor: true })
+      .setDepth(depth);
+
+    const checkoutButton = this.add.graphics().setDepth(depth);
+    const checkoutLabel = this.add.text(0, 0, 'Checkout', {
+      fontSize: `${baseCheckoutFontSize}px`,
+      fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
+      color: '#ffffff',
+      fontStyle: 'bold'
+    }).setOrigin(0.5, 0.5).setDepth(depth);
+    const checkoutZone = this.add.zone(0, 0, 84, 24)
+      .setOrigin(0, 0)
+      .setDepth(depth);
+
+    // Initialize UI state BEFORE any row checkbox draw calls.
+    this.shoppingListUI = {
+      bg,
+      titleBox,
+      title,
+      toggle,
+      toggleZone,
+      checkoutButton,
+      checkoutLabel,
+      checkoutZone,
+      buyTitle,
+      divider,
+      yesHeader,
+      noHeader,
+      resizeHandle,
+      resizeZone,
+      defaultPanelW,
+      defaultPanelH,
+      panelW: defaultPanelW,
+      panelH: defaultPanelH,
+      panelMargin,
+      baseRowHeight,
+      baseBoxSize,
+      baseLabelFontSize,
+      baseTitleFontSize,
+      baseCheckoutFontSize,
+      collapsedH
+    };
 
     this.shoppingListCollapsible = [buyTitle, divider, yesHeader, noHeader];
     this.shoppingListRows = [];
+    this.shoppingListRowObjs = [];
 
     productsData.forEach((product, index) => {
-      const rowY = headerY + headerToFirstRowPadding + index * rowHeight;
-      const boxY = rowY - 2;
-
-      const nameText = this.add.text(left, rowY - 2, product.name, {
+      const nameText = this.add.text(0, 0, product.name, {
         ...labelStyle,
         fontSize: '12px'
       }).setOrigin(0, 0).setDepth(depth);
 
-      const buyBoxX = buyColX - 2;
-      const dontBuyBoxX = dontBuyColX - 2;
-
       const buyGraphic = this.add.graphics().setDepth(depth);
       const dontBuyGraphic = this.add.graphics().setDepth(depth);
 
+      const hitH = boxSize + 6;
+      const hitW = 28;
+      const buyZone = this.add.zone(0, 0, hitW, hitH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(depth);
+      const dontBuyZone = this.add.zone(0, 0, hitW, hitH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(depth);
+
       const drawRowCheckboxes = () => {
+        const layout = this.getShoppingListLayout();
+        const buyBoxX = buyZone.x;
+        const dontBuyBoxX = dontBuyZone.x;
+        const boxY = buyZone.y;
+        const boxSize = layout.boxSize;
+
         const choice = this.shoppingChoices[product.id];
         buyGraphic.clear();
         dontBuyGraphic.clear();
@@ -1478,11 +1529,6 @@ export class StoreScene extends Phaser.Scene {
 
       drawRowCheckboxes();
 
-      const hitH = boxSize + 6;
-      const hitW = 28;
-      const buyZone = this.add.zone(buyBoxX, boxY, hitW, hitH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(depth);
-      const dontBuyZone = this.add.zone(dontBuyBoxX, boxY, hitW, hitH).setOrigin(0, 0).setInteractive({ useHandCursor: true }).setDepth(depth);
-
       buyZone.on('pointerdown', () => {
         this.shoppingChoices[product.id] = this.shoppingChoices[product.id] === 'buy' ? null : 'buy';
         drawRowCheckboxes();
@@ -1496,39 +1542,49 @@ export class StoreScene extends Phaser.Scene {
 
       this.shoppingListCollapsible.push(nameText, buyGraphic, dontBuyGraphic, buyZone, dontBuyZone);
       this.shoppingListRows.push({ productId: product.id, drawRowCheckboxes });
+      this.shoppingListRowObjs.push({ product, index, nameText, buyGraphic, dontBuyGraphic, buyZone, dontBuyZone, drawRowCheckboxes });
     });
 
-    const checkoutButton = this.add.graphics().setDepth(depth);
-    const checkoutLabel = this.add.text(panelLeft + panelW - 52, panelY + panelH - 24, 'Checkout', {
-      fontSize: '11px',
-      fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif',
-      color: '#ffffff',
-      fontStyle: 'bold'
-    }).setOrigin(0.5, 0.5).setDepth(depth);
-    const checkoutZone = this.add.zone(panelLeft + panelW - 94, panelY + panelH - 36, 84, 24)
-      .setOrigin(0, 0)
-      .setDepth(depth);
-
     this.shoppingListCollapsible.push(checkoutButton, checkoutLabel, checkoutZone);
-
-    this.shoppingListUI = {
-      bg,
-      titleBox,
-      title,
-      toggle,
-      toggleZone,
-      checkoutButton,
-      checkoutLabel,
-      checkoutZone,
-      panelLeft,
-      panelY,
-      panelW,
-      panelH,
-      collapsedH
-    };
+    this.shoppingListCollapsible.push(resizeHandle, resizeZone);
 
     toggleZone.on('pointerdown', () => {
       this.shoppingListCollapsed = !this.shoppingListCollapsed;
+      this.updateShoppingListVisibility();
+    });
+
+    this._shoppingListResizeState = null;
+    resizeZone.on('pointerdown', pointer => {
+      if (this.shoppingListCollapsed) return;
+      this._shoppingListResizeState = {
+        startX: pointer.x,
+        startY: pointer.y,
+        startW: this.shoppingListUI.panelW,
+        startH: this.shoppingListUI.panelH
+      };
+    });
+    this.input.on('pointerup', () => {
+      this._shoppingListResizeState = null;
+    });
+    this.input.on('pointermove', pointer => {
+      if (!this._shoppingListResizeState) return;
+      if (!pointer.isDown) {
+        this._shoppingListResizeState = null;
+        return;
+      }
+
+      const { startX, startY, startW, startH } = this._shoppingListResizeState;
+      // Drag up/left to expand.
+      const dw = startX - pointer.x;
+      const dh = startY - pointer.y;
+
+      const minW = this.shoppingListUI.defaultPanelW;
+      const minH = this.shoppingListUI.defaultPanelH;
+      const maxW = 380;
+      const maxH = 360;
+
+      this.shoppingListUI.panelW = Phaser.Math.Clamp(startW + dw, minW, maxW);
+      this.shoppingListUI.panelH = Phaser.Math.Clamp(startH + dh, minH, maxH);
       this.updateShoppingListVisibility();
     });
 
@@ -1537,6 +1593,47 @@ export class StoreScene extends Phaser.Scene {
   }
 
   updateHUD() {
+  }
+
+  getShoppingListLayout() {
+    if (!this.shoppingListUI) return null;
+    const { panelW, panelH, panelMargin, collapsedH, defaultPanelW, defaultPanelH, baseRowHeight, baseBoxSize, baseLabelFontSize, baseTitleFontSize, baseCheckoutFontSize } = this.shoppingListUI;
+    const panelLeft = 800 - panelW - panelMargin;
+    const panelY = 600 - panelH - panelMargin;
+    const currentPanelY = this.shoppingListCollapsed ? panelY + panelH - collapsedH : panelY;
+
+    const scale = this.shoppingListCollapsed ? 1 : Phaser.Math.Clamp(Math.min(panelW / defaultPanelW, panelH / defaultPanelH), 1, 1.35);
+    const rowHeight = Math.round(baseRowHeight * scale);
+    const boxSize = Math.round(baseBoxSize * scale);
+    const labelFontSize = Math.round(baseLabelFontSize * scale);
+    const titleFontSize = Math.round(baseTitleFontSize * scale);
+    const checkoutFontSize = Math.round(baseCheckoutFontSize * scale);
+
+    const headerY = currentPanelY + Math.round(32 * scale);
+    const left = panelLeft + 10;
+    const buyColX = panelLeft + panelW - 80;
+    const dontBuyColX = panelLeft + panelW - 40;
+    const dividerX = buyColX - 12;
+
+    return {
+      panelLeft,
+      panelY,
+      currentPanelY,
+      panelW,
+      panelH,
+      collapsedH,
+      headerY,
+      headerToFirstRowPadding: Math.round(25 * scale),
+      rowHeight,
+      boxSize,
+      labelFontSize,
+      titleFontSize,
+      checkoutFontSize,
+      left,
+      buyColX,
+      dontBuyColX,
+      dividerX
+    };
   }
 
   updateShoppingListVisibility() {
@@ -1551,15 +1648,17 @@ export class StoreScene extends Phaser.Scene {
       checkoutButton,
       checkoutLabel,
       checkoutZone,
-      panelLeft,
-      panelY,
-      panelW,
-      panelH,
-      collapsedH
+      buyTitle,
+      divider,
+      yesHeader,
+      noHeader,
+      resizeHandle,
+      resizeZone
     } = this.shoppingListUI;
 
     const isCollapsed = this.shoppingListCollapsed;
-    const currentPanelY = isCollapsed ? panelY + panelH - collapsedH : panelY;
+    const layout = this.getShoppingListLayout();
+    const { panelLeft, panelY, currentPanelY, panelW, panelH, collapsedH, headerY, left, buyColX, dontBuyColX, dividerX, rowHeight, headerToFirstRowPadding, boxSize, labelFontSize, titleFontSize, checkoutFontSize } = layout;
 
     bg.clear();
     bg.fillStyle(0xffffff, 0.95);
@@ -1569,12 +1668,65 @@ export class StoreScene extends Phaser.Scene {
 
     titleBox.clear();
     titleBox.lineStyle(1.5, 0x636e72, 0.7);
-    titleBox.strokeRoundedRect(panelLeft + 10, currentPanelY + 10, 108, 26, 6);
+    // Scale text with panel size (expanded only), and position title at top between handle and Buy?
+    title.setFontSize(titleFontSize);
+    buyTitle.setFontSize(titleFontSize);
+    yesHeader.setFontSize(labelFontSize);
+    noHeader.setFontSize(labelFontSize);
+    checkoutLabel.setFontSize(checkoutFontSize);
 
-    title.setPosition(800 - panelW + 50, currentPanelY + 14);
+    const titleY = currentPanelY + 10;
+    const titleLeftBound = panelLeft + 13; // after resize handle
+    const titleRightBound = panelLeft + panelW - 90; // before "Buy?"
+    const titleX = (titleLeftBound + titleRightBound) / 2;
+    title.setPosition(titleX, titleY + 2);
+
+    // Fit box around title text
+    const padX = 10;
+    const boxW = Math.max(108, Math.round(title.width + padX * 2));
+    const boxH = 26;
+    titleBox.strokeRoundedRect(titleX - boxW / 2, titleY, boxW, boxH, 6);
     toggleZone.setPosition(panelLeft + panelW - 30, currentPanelY + 10);
     checkoutLabel.setPosition(panelLeft + panelW - 52, currentPanelY + panelH - 24);
     checkoutZone.setPosition(panelLeft + panelW - 94, currentPanelY + panelH - 36);
+
+    buyTitle.setPosition(panelLeft + panelW - 65, currentPanelY + 14);
+
+    divider.clear();
+    divider.lineStyle(1.5, 0x636e72, 0.35);
+    divider.lineBetween(dividerX, headerY + 2, dividerX, currentPanelY + panelH - 54);
+    yesHeader.setPosition(buyColX, headerY + 5);
+    noHeader.setPosition(dontBuyColX, headerY + 5);
+
+    // Resize handle visual + position
+    resizeHandle.clear();
+    resizeHandle.lineStyle(2, 0x636e72, 0.7);
+    // Three parallel 45° lines forming a triangular "grip" for top-left.
+    // Rotated so the shortest line sits deepest/closest to the corner.
+    const ox = panelLeft + 6;
+    const oy = currentPanelY + 6;
+    resizeHandle.lineBetween(ox, oy + 4, ox + 4, oy);
+    resizeHandle.lineBetween(ox, oy + 8, ox + 8, oy);
+    resizeHandle.lineBetween(ox, oy + 12, ox + 12, oy);
+    resizeZone.setPosition(panelLeft + 2, currentPanelY + 2);
+
+    // Reposition rows and redraw checkbox graphics at new x/y.
+    if (this.shoppingListRowObjs) {
+      this.shoppingListRowObjs.forEach(row => {
+        const rowY = headerY + headerToFirstRowPadding + row.index * rowHeight;
+        const boxY = rowY + Math.round((row.nameText.height - boxSize) / 2);
+        const buyBoxX = buyColX - 2;
+        const dontBuyBoxX = dontBuyColX - 2;
+
+        row.nameText.setFontSize(labelFontSize);
+        row.nameText.setPosition(left, rowY);
+        row.buyZone.setPosition(buyBoxX, boxY);
+        row.dontBuyZone.setPosition(dontBuyBoxX, boxY);
+        row.buyZone.setSize(Math.max(28, boxSize + 12), boxSize + 8);
+        row.dontBuyZone.setSize(Math.max(28, boxSize + 12), boxSize + 8);
+        row.drawRowCheckboxes();
+      });
+    }
 
     toggle.clear();
     toggle.fillStyle(0x636e72, 0.85);
@@ -1606,15 +1758,12 @@ export class StoreScene extends Phaser.Scene {
       checkoutButton,
       checkoutLabel,
       checkoutZone,
-      panelLeft,
-      panelY,
-      panelW,
-      panelH,
-      collapsedH
+      panelH
     } = this.shoppingListUI;
 
     const isReady = productsData.every(product => Boolean(this.shoppingChoices[product.id]));
-    const currentPanelY = this.shoppingListCollapsed ? panelY + panelH - collapsedH : panelY;
+    const layout = this.getShoppingListLayout();
+    const { panelLeft, currentPanelY, panelW, checkoutFontSize } = layout;
     const buttonX = panelLeft + panelW - 94;
     const buttonY = currentPanelY + panelH - 36;
     const buttonW = 84;
@@ -1627,6 +1776,7 @@ export class StoreScene extends Phaser.Scene {
     checkoutButton.strokeRoundedRect(buttonX, buttonY, buttonW, buttonH, 6);
 
     checkoutLabel.setColor(isReady ? '#ffffff' : '#f5f6fa');
+    checkoutLabel.setFontSize(checkoutFontSize);
 
     if (this.shoppingListCollapsed) {
       checkoutZone.disableInteractive();
